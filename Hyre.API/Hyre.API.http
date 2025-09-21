@@ -1,0 +1,6 @@
+@Hyre.API_HostAddress = http://localhost:5007
+
+GET {{Hyre.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
