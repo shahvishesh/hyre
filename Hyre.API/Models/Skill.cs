@@ -10,5 +10,7 @@ namespace Hyre.API.Models
         [Required]
         [MaxLength(100)]
         public string SkillName { get; set; }
+
+        public ICollection<JobSkill> JobSkills { get; set; } = new List<JobSkill>();
     }
 }

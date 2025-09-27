@@ -51,5 +51,7 @@ namespace Hyre.API.Models
 
         [ForeignKey(nameof(SelectedCandidateID))]
         public Candidate SelectedCandidate { get; set; }
+
+        public ICollection<JobSkill> JobSkills { get; set; } = new List<JobSkill>();
     }
 }
