@@ -72,6 +72,15 @@ namespace Hyre.API.Services
             );
         }
 
+        public async Task<bool> DeleteJobAsync(int jobId)
+        {
+            var job = await _jobRepository.GetByIdAsync(jobId);
+            if (job == null) return false;
+
+            await _jobRepository.DeleteAsync(jobId);
+            return true;
+        }
+
         public async Task<List<JobResponseDto>> GetAllJobsAsync()
         {
             var jobs = await _jobRepository.GetAllAsync();
@@ -120,6 +129,74 @@ namespace Hyre.API.Services
                     js.SkillID,
                     js.Skill.SkillName,
                     js.SkillType
+                )).ToList()
+            );
+        }
+
+        public async Task<JobResponseDto?> UpdateJobAsync(int jobId, UpdateJobDto dto)
+        {
+            var job = await _jobRepository.GetByIdAsync(jobId);
+            if (job == null) return null;
+
+            if (!string.IsNullOrEmpty(dto.Title)) job.Title = dto.Title;
+            if (!string.IsNullOrEmpty(dto.Description)) job.Description = dto.Description;
+            if (dto.MinExperience.HasValue) job.MinExperience = dto.MinExperience.Value;
+            if (dto.MaxExperience.HasValue) job.MaxExperience = dto.MaxExperience.Value;
+            if (!string.IsNullOrEmpty(dto.CompanyName)) job.CompanyName = dto.CompanyName;
+            if (!string.IsNullOrEmpty(dto.Location)) job.Location = dto.Location;
+            if (!string.IsNullOrEmpty(dto.JobType)) job.JobType = dto.JobType;
+            if (!string.IsNullOrEmpty(dto.WorkplaceType)) job.WorkplaceType = dto.WorkplaceType;
+            if (!string.IsNullOrEmpty(dto.Status)) job.Status = dto.Status;
+            if (!string.IsNullOrEmpty(dto.ClosedReason)) job.ClosedReason = dto.ClosedReason;
+
+            job.UpdatedAt = DateTime.Now;
+
+            if (dto.Skills != null && dto.Skills.Any())
+            {
+                job.JobSkills.Clear();
+                foreach (var skillDto in dto.Skills)
+                {
+                    job.JobSkills.Add(new JobSkill
+                    {
+                        SkillID = skillDto.SkillID,
+                        SkillType = skillDto.SkillType
+                    });
+                }
+            }
+
+            if (dto.Status?.Equals("Closed", StringComparison.OrdinalIgnoreCase) == true)
+            {
+                bool hasCandidate = job.SelectedCandidateID.HasValue || dto.SelectedCandidateID.HasValue;
+                bool hasReason = !string.IsNullOrWhiteSpace(dto.ClosedReason);
+
+                if (!hasCandidate && !hasReason)
+                {
+                    throw new InvalidOperationException(
+                        "Job cannot be closed without either selecting a candidate or providing a closure reason."
+                    );
+                }
+
+                if (dto.SelectedCandidateID.HasValue)
+                    job.SelectedCandidateID = dto.SelectedCandidateID;
+            }
+
+            await _jobRepository.UpdateAsync(job);
+
+            return new JobResponseDto
+            (
+                job.JobID,
+                job.Title,
+                job.Description,
+                job.MinExperience,
+                job.MaxExperience,
+                job.CompanyName,
+                job.Location,
+                job.JobType,
+                job.WorkplaceType,
+                job.Status,
+                job.CreatedAt,
+                job.JobSkills.Select(js => new JobSkillDetailDto(
+                    js.SkillID, js.Skill.SkillName, js.SkillType
                 )).ToList()
             );
         }

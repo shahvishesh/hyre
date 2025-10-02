@@ -57,5 +57,35 @@ namespace Hyre.API.Controllers
 
             return Ok(job);
         }
+
+        /// <summary>
+        /// Update a job
+        /// </summary>
+        [HttpPut("{jobId}")]
+        //[Authorize(Roles = "Recruiter,Admin")]
+        public async Task<IActionResult> UpdateJob(int jobId, [FromBody] UpdateJobDto dto)
+        {
+            var updatedByUserId = int.Parse(User.FindFirst("UserID").Value);
+
+            var job = await _jobService.UpdateJobAsync(jobId, dto);
+            if (job == null)
+                return NotFound(new { Message = "Job not found" });
+
+            return Ok(job);
+        }
+
+        /// <summary>
+        /// Delete a job
+        /// </summary>
+        [HttpDelete("{jobId}")]
+        //[Authorize(Roles = "Recruiter,Admin")]
+        public async Task<IActionResult> DeleteJob(int jobId)
+        {
+            var success = await _jobService.DeleteJobAsync(jobId);
+            if (!success)
+                return NotFound(new { Message = "Job not found" });
+
+            return NoContent();
+        }
     }
 }
