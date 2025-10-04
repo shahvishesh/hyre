@@ -20,13 +20,10 @@ namespace Hyre.API.Models
         public string Email { get; set; }
 
         [Required]
-        [MaxLength(255)]
         public string PasswordHash { get; set; }
 
         [MaxLength(20)]
         public string Phone { get; set; }
 
-        [MaxLength(20)]
-        public string Status { get; set; } = "Active";
     }
 }
