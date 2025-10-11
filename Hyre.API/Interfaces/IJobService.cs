@@ -4,7 +4,7 @@ namespace Hyre.API.Interfaces
 {
     public interface IJobService
     {
-        Task<JobResponseDto> CreateJobAsync(CreateJobDto dto, int createdByUserId);
+        Task<JobResponseDto> CreateJobAsync(CreateJobDto dto, String createdByUserId);
         Task<List<JobResponseDto>> GetAllJobsAsync();
         Task<JobResponseDto?> GetJobByIdAsync(int jobId);
 

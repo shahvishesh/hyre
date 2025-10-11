@@ -26,6 +26,8 @@ namespace Hyre.API.Repositories
             return await _context.Jobs
                 .Include(j => j.Creator)
                 .Include(j => j.SelectedCandidate)
+                .Include(j => j.JobSkills)
+                .ThenInclude(js => js.Skill)
                 .FirstOrDefaultAsync(j => j.JobID == jobId);
         }
 
@@ -34,6 +36,8 @@ namespace Hyre.API.Repositories
             return await _context.Jobs
                 .Include(j => j.Creator)
                 .Include(j => j.SelectedCandidate)
+                .Include(j => j.JobSkills)
+                .ThenInclude(js => js.Skill)
                 .ToListAsync();
         }
 

@@ -36,16 +36,16 @@ namespace Hyre.API.Models
 
         // Foreign Keys
         [Required]
-        public int CreatedBy { get; set; }
+        public String CreatedBy { get; set; }
 
         [ForeignKey(nameof(CreatedBy))]
-        public User Creator { get; set; }
+        public ApplicationUser Creator { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime UpdatedAt { get; set; } = DateTime.Now;
 
         [MaxLength(255)]
-        public string ClosedReason { get; set; }
+        public string? ClosedReason { get; set; }
 
         public int? SelectedCandidateID { get; set; }
 

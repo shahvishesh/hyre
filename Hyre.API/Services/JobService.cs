@@ -17,7 +17,7 @@ namespace Hyre.API.Services
             _context = context;
         }
 
-        public async Task<JobResponseDto> CreateJobAsync(CreateJobDto dto, int createdByUserId)
+        public async Task<JobResponseDto> CreateJobAsync(CreateJobDto dto, String createdByUserId)
         {
             var job = new Job
             {
@@ -156,11 +156,15 @@ namespace Hyre.API.Services
                 job.JobSkills.Clear();
                 foreach (var skillDto in dto.Skills)
                 {
-                    job.JobSkills.Add(new JobSkill
+                    var skill = await _context.Skills.FindAsync(skillDto.SkillID);
+                    if (skill != null)
                     {
-                        SkillID = skillDto.SkillID,
-                        SkillType = skillDto.SkillType
-                    });
+                        job.JobSkills.Add(new JobSkill
+                        {
+                            SkillID = skill.SkillID,
+                            SkillType = skillDto.SkillType
+                        });
+                    }
                 }
             }
 
@@ -196,7 +200,9 @@ namespace Hyre.API.Services
                 job.Status,
                 job.CreatedAt,
                 job.JobSkills.Select(js => new JobSkillDetailDto(
-                    js.SkillID, js.Skill.SkillName, js.SkillType
+                    js.SkillID, 
+                    js.Skill.SkillName, 
+                    js.SkillType
                 )).ToList()
             );
         }

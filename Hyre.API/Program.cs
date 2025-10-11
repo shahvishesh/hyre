@@ -25,25 +25,37 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
 );
 
-builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
+builder.Services.AddIdentityCore<ApplicationUser>(options =>
+{
+    options.User.RequireUniqueEmail = true;
+})
+    .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddSignInManager()
     .AddDefaultTokenProviders();
 
+
 // JWT Auth
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+}).AddJwtBearer(options =>
     {
+        options.IncludeErrorDetails = true;
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
             ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"],
-            ValidAudience = builder.Configuration["Jwt:Audience"],
+            ValidIssuer = builder.Configuration["AppSettings:Issuer"],
+            ValidAudience = builder.Configuration["AppSettings:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+                Encoding.UTF8.GetBytes(builder.Configuration["AppSettings:Token"]))
         };
+
     });
 
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -70,6 +82,36 @@ async Task SeedRolesAsync(RoleManager<IdentityRole> roleManager)
     }
 }
 
+//Log request details
+app.Use(async (context, next) =>
+{
+    Console.WriteLine("\n========== INCOMING REQUEST ==========");
+    Console.WriteLine($"Time: {DateTime.Now:HH:mm:ss}");
+    Console.WriteLine($"Method: {context.Request.Method}");
+    Console.WriteLine($"Path: {context.Request.Path}");
+    Console.WriteLine($"QueryString: {context.Request.QueryString}");
+
+    Console.WriteLine("Headers:");
+    foreach (var header in context.Request.Headers)
+    {
+        if (header.Key.ToLower() == "authorization")
+        {
+            var value = header.Value.ToString();
+            Console.WriteLine($"  {header.Key}: {(string.IsNullOrEmpty(value) ? "MISSING" : value.Substring(0, Math.Min(50, value.Length)) + "...")}");
+        }
+        else
+        {
+            Console.WriteLine($"  {header.Key}: {header.Value}");
+        }
+    }
+
+    await next();
+
+    Console.WriteLine($"Response Status: {context.Response.StatusCode}");
+    Console.WriteLine($"User Authenticated: {context.User?.Identity?.IsAuthenticated}");
+    Console.WriteLine("========== REQUEST COMPLETE ==========\n");
+});
+
 using (var scope = app.Services.CreateScope())
 {
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
@@ -82,11 +124,11 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-    app.MapScalarApiReference();
+    //app.MapScalarApiReference();
 }
 
-app.UseHttpsRedirection();
-
+//app.UseHttpsRedirection();
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

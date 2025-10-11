@@ -37,7 +37,7 @@ namespace Hyre.API.Controllers.Auth
             }
             catch (Exception ex)
             {
-                return BadRequest(new { error = ex.Message });
+                return BadRequest(new { error = ex.ToString() });
             }
         }
 
@@ -54,7 +54,7 @@ namespace Hyre.API.Controllers.Auth
             }
             catch (Exception ex)
             {
-                return Unauthorized(new { error = ex.Message });
+                return Unauthorized(new { error = ex.ToString() });
             }
         }
 

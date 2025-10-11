@@ -53,7 +53,8 @@ namespace Hyre.API.Services
                 UserName = dto.Email,
                 Email = dto.Email,
                 FirstName = dto.FirstName,
-                LastName = dto.LastName
+                LastName = dto.LastName,
+                PhoneNumber = dto.Phone
             };
 
             var result = await _userManager.CreateAsync(user, dto.Password);
@@ -87,7 +88,7 @@ namespace Hyre.API.Services
             claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration.GetValue<String>("AppSettings:Token")));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256Signature);
 
             var tokenDescriptor = new JwtSecurityToken(
                 issuer: _configuration.GetValue<String>("AppSettings:Issuer"),

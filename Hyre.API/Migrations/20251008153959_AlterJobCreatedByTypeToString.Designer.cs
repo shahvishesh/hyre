@@ -4,6 +4,7 @@ using Hyre.API.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Hyre.API.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class UserDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251008153959_AlterJobCreatedByTypeToString")]
+    partial class AlterJobCreatedByTypeToString
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -147,6 +150,7 @@ namespace Hyre.API.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("JobID"));
 
                     b.Property<string>("ClosedReason")
+                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
@@ -274,48 +278,6 @@ namespace Hyre.API.Migrations
                     b.HasKey("SkillID");
 
                     b.ToTable("Skills");
-
-                    b.HasData(
-                        new
-                        {
-                            SkillID = 1,
-                            SkillName = "JavaScript"
-                        },
-                        new
-                        {
-                            SkillID = 2,
-                            SkillName = "C#"
-                        },
-                        new
-                        {
-                            SkillID = 3,
-                            SkillName = "SQL"
-                        },
-                        new
-                        {
-                            SkillID = 4,
-                            SkillName = "Node.js"
-                        },
-                        new
-                        {
-                            SkillID = 5,
-                            SkillName = "React"
-                        },
-                        new
-                        {
-                            SkillID = 6,
-                            SkillName = "Python"
-                        },
-                        new
-                        {
-                            SkillID = 7,
-                            SkillName = "Angular"
-                        },
-                        new
-                        {
-                            SkillID = 8,
-                            SkillName = "AWS"
-                        });
                 });
 
             modelBuilder.Entity("Hyre.API.Models.User", b =>
