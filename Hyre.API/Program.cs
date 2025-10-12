@@ -1,6 +1,7 @@
 using Hyre.API.Data;
 using Hyre.API.Interfaces;
 using Hyre.API.Interfaces.Auth;
+using Hyre.API.Interfaces.Role;
 using Hyre.API.Models;
 using Hyre.API.Repositories;
 using Hyre.API.Services;
@@ -61,6 +62,9 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IJobService, JobService>();
 builder.Services.AddScoped<IJobRepository, JobRepository>();
+builder.Services.AddScoped<IAdminRolesRepository, AdminRolesRepository>();
+builder.Services.AddScoped<AdminRolesService>();
+
 
 builder.Services.AddAuthorization();
 
