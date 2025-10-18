@@ -4,6 +4,7 @@ using Hyre.API.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Hyre.API.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class UserDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251017064507_UpdateCandidate")]
+    partial class UpdateCandidate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -152,41 +155,6 @@ namespace Hyre.API.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Candidates");
-                });
-
-            modelBuilder.Entity("Hyre.API.Models.CandidateSkill", b =>
-                {
-                    b.Property<int>("CandidateSkillID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CandidateSkillID"));
-
-                    b.Property<DateTime>("AddedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("AddedBy")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<int>("CandidateID")
-                        .HasColumnType("int");
-
-                    b.Property<int>("SkillID")
-                        .HasColumnType("int");
-
-                    b.Property<decimal?>("YearsOfExperience")
-                        .HasPrecision(4, 1)
-                        .HasColumnType("decimal(4,1)");
-
-                    b.HasKey("CandidateSkillID");
-
-                    b.HasIndex("AddedBy");
-
-                    b.HasIndex("CandidateID");
-
-                    b.HasIndex("SkillID");
-
-                    b.ToTable("CandidateSkills");
                 });
 
             modelBuilder.Entity("Hyre.API.Models.Job", b =>
@@ -577,31 +545,6 @@ namespace Hyre.API.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Hyre.API.Models.CandidateSkill", b =>
-                {
-                    b.HasOne("Hyre.API.Models.ApplicationUser", "AddedByUser")
-                        .WithMany()
-                        .HasForeignKey("AddedBy");
-
-                    b.HasOne("Hyre.API.Models.Candidate", "Candidate")
-                        .WithMany("CandidateSkills")
-                        .HasForeignKey("CandidateID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Hyre.API.Models.Skill", "Skill")
-                        .WithMany("CandidateSkills")
-                        .HasForeignKey("SkillID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("AddedByUser");
-
-                    b.Navigation("Candidate");
-
-                    b.Navigation("Skill");
-                });
-
             modelBuilder.Entity("Hyre.API.Models.Job", b =>
                 {
                     b.HasOne("Hyre.API.Models.ApplicationUser", "Creator")
@@ -708,11 +651,6 @@ namespace Hyre.API.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Hyre.API.Models.Candidate", b =>
-                {
-                    b.Navigation("CandidateSkills");
-                });
-
             modelBuilder.Entity("Hyre.API.Models.Job", b =>
                 {
                     b.Navigation("JobSkills");
@@ -720,8 +658,6 @@ namespace Hyre.API.Migrations
 
             modelBuilder.Entity("Hyre.API.Models.Skill", b =>
                 {
-                    b.Navigation("CandidateSkills");
-
                     b.Navigation("JobSkills");
                 });
 #pragma warning restore 612, 618

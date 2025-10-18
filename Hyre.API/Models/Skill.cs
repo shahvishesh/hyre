@@ -12,5 +12,7 @@ namespace Hyre.API.Models
         public string SkillName { get; set; }
 
         public ICollection<JobSkill> JobSkills { get; set; } = new List<JobSkill>();
+        public ICollection<CandidateSkill> CandidateSkills { get; set; } = new List<CandidateSkill>();
+
     }
 }

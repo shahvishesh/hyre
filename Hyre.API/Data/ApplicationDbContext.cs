@@ -17,6 +17,7 @@ namespace Hyre.API.Data
         public DbSet<JobSkill> JobSkills { get; set; }
         public DbSet<Skill> Skills { get; set; }
 
+        public DbSet<CandidateSkill> CandidateSkills { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
