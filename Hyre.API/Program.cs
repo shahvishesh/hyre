@@ -1,6 +1,7 @@
 using Hyre.API.Data;
 using Hyre.API.Interfaces;
 using Hyre.API.Interfaces.Auth;
+using Hyre.API.Interfaces.CandidateMatching;
 using Hyre.API.Interfaces.Candidates;
 using Hyre.API.Interfaces.Role;
 using Hyre.API.Models;
@@ -68,6 +69,8 @@ builder.Services.AddScoped<AdminRolesService>();
 
 builder.Services.AddScoped<ICandidateService, CandidateService>();
 builder.Services.AddScoped<ICandidateRepository, CandidateRepository>();
+
+builder.Services.AddScoped<ICandidateMatchingService, CandidateMatchingService>();
 
 
 builder.Services.AddAuthorization();
