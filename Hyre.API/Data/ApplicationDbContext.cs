@@ -35,5 +35,7 @@ namespace Hyre.API.Data
         }
         public DbSet<Candidate> Candidates { get; set; }
 
+        public DbSet<CandidateJob> CandidateJobs { get; set; }
+
     }
 }

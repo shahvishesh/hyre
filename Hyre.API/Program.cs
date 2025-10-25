@@ -72,6 +72,7 @@ builder.Services.AddScoped<ICandidateRepository, CandidateRepository>();
 
 builder.Services.AddScoped<ICandidateMatchingService, CandidateMatchingService>();
 
+builder.Services.AddScoped<ICandidateJobService, ICandidateJobService>();
 
 builder.Services.AddAuthorization();
 
