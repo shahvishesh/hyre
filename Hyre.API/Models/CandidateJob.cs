@@ -21,16 +21,16 @@ namespace Hyre.API.Models
         public DateTime UpdatedAt { get; set; } = DateTime.Now;
 
         [Required]
-        public string? CreatedBy { get; set; }
+        public string CreatedBy { get; set; }
 
         [ForeignKey(nameof(CreatedBy))]
-        public ApplicationUser? CreatedByUser { get; set; }
+        public ApplicationUser CreatedByUser { get; set; }
 
         [ForeignKey(nameof(CandidateID))]
-        public Candidate? Candidate { get; set; }
+        public Candidate Candidate { get; set; }
 
         [ForeignKey(nameof(JobID))]
-        public Job? Job { get; set; }
+        public Job Job { get; set; }
     }
 
 }

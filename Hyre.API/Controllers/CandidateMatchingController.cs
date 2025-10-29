@@ -18,8 +18,15 @@ namespace Hyre.API.Controllers
         [HttpGet("{jobId}/candidates/match")]
         public async Task<IActionResult> GetMatchingCandidates(int jobId)
         {
-            var result = await _matchingService.GetMatchingCandidatesAsync(jobId);
-            return Ok(result);
+            try
+            {
+                var result = await _matchingService.GetMatchingCandidatesAsync(jobId);
+                return Ok(result);
+
+            }catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
     }
 }

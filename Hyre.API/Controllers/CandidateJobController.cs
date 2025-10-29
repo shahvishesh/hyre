@@ -20,6 +20,9 @@ namespace Hyre.API.Controllers
         [HttpPost("{jobId}/link")]
         public async Task<IActionResult> LinkCandidateToJob(int jobId, [FromBody] CreateCandidateLinkDto dto)
         {
+            try
+            {
+
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             if (string.IsNullOrEmpty(userId))
@@ -28,6 +31,10 @@ namespace Hyre.API.Controllers
             var result = await _candidateJobService.LinkCandidateAsync(jobId, dto, userId);
 
             return Ok(new { message = "Candidate linked successfully.", result });
+            }
+            catch (Exception ex) { 
+                return BadRequest(new { message = ex.Message });
+            }
         }
     }
 }
