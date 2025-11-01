@@ -2,7 +2,9 @@ using Hyre.API.Data;
 using Hyre.API.Interfaces;
 using Hyre.API.Interfaces.Auth;
 using Hyre.API.Interfaces.CandidateMatching;
+using Hyre.API.Interfaces.CandidateReview;
 using Hyre.API.Interfaces.Candidates;
+using Hyre.API.Interfaces.ReviewerJob;
 using Hyre.API.Interfaces.Role;
 using Hyre.API.Models;
 using Hyre.API.Repositories;
@@ -73,6 +75,10 @@ builder.Services.AddScoped<ICandidateRepository, CandidateRepository>();
 builder.Services.AddScoped<ICandidateMatchingService, CandidateMatchingService>();
 
 builder.Services.AddScoped<ICandidateJobService, CandidateJobService>();
+
+builder.Services.AddScoped<ICandidateReviewService, CandidateReviewService>();
+builder.Services.AddScoped<IJobReviewerService, JobReviewerService>();
+builder.Services.AddScoped<IJobReviewerRepository, JobReviewerRepository>();
 
 builder.Services.AddAuthorization();
 
