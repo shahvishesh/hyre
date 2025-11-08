@@ -1,4 +1,5 @@
-﻿using Hyre.API.Interfaces.CandidateReview;
+﻿using Hyre.API.Exceptions;
+using Hyre.API.Interfaces.CandidateReview;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -114,6 +115,36 @@ namespace Hyre.API.Controllers
             }catch(Exception ex)
             {
                 return BadRequest(new { Message = ex.Message });
+            }
+        }
+
+        [HttpGet("{candidateId}/resume/{jobId}")]
+        [Authorize(Roles = "Reviewer,Recruiter,Admin,HR")]
+        public async Task<IActionResult> GetResume(int candidateId, int jobId)
+        {
+            try
+            {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                    return Unauthorized();
+
+                var userRoles = User.Claims
+                    .Where(c => c.Type == ClaimTypes.Role)
+                    .Select(c => c.Value)
+                    .ToList();
+
+                var fileBytes = await _service
+                    .GetCandidateResumeAsync(candidateId, userId, jobId, userRoles);
+
+                return File(fileBytes, "application/pdf");
+            }
+            catch (ForbiddenAccessException ex)
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return NotFound(new { message = ex.Message });
             }
         }
     }

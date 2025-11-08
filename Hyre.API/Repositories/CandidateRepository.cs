@@ -44,5 +44,11 @@ namespace Hyre.API.Repositories
                 await _context.SaveChangesAsync();
             }
         }
+
+        public async Task<bool> IsCandidateLinkedToJobAsync(int candidateId, int jobId)
+        {
+            return await _context.CandidateJobs
+                .AnyAsync(cj => cj.CandidateID == candidateId && cj.JobID == jobId);
+        }
     }
 }

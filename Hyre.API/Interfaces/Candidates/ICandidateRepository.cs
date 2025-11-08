@@ -8,5 +8,8 @@ namespace Hyre.API.Interfaces.Candidates
         Task AddCandidatesAsync(IEnumerable<Candidate> candidates);
         Task<Candidate?> GetCandidateByIdAsync(int candidateId);
         Task UpdateResumePathAsync(int candidateId, string resumePath);
+
+        Task<bool> IsCandidateLinkedToJobAsync(int candidateId, int jobId);
+ 
     }
 }

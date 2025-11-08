@@ -1,6 +1,9 @@
 ﻿using Hyre.API.Data;
+using Hyre.API.Exceptions;
 using Hyre.API.Interfaces;
 using Hyre.API.Interfaces.CandidateReview;
+using Hyre.API.Interfaces.Candidates;
+using Hyre.API.Interfaces.ReviewerJob;
 using Hyre.API.Models;
 using Microsoft.EntityFrameworkCore;
 using static Hyre.API.Dtos.CandidateReview.ReviewDtos;
@@ -11,12 +14,18 @@ namespace Hyre.API.Services
     {
         private readonly ApplicationDbContext _context;
         private readonly IJobService _jobService;
+        private readonly ICandidateRepository _candidateRepository;
+        private readonly IJobReviewerRepository _jobReviewerRepository;
+        private readonly IWebHostEnvironment _env;
 
 
-        public CandidateReviewService(ApplicationDbContext context, IJobService jobService)
+        public CandidateReviewService(ApplicationDbContext context, IJobService jobService, ICandidateRepository candidateRepository, IJobReviewerRepository jobReviewerRepository, IWebHostEnvironment env)
         {
             _context = context;
             _jobService = jobService;
+            _candidateRepository = candidateRepository;
+            _jobReviewerRepository = jobReviewerRepository;
+            _env = env;
         }
 
         public async Task<ReviewResponseDto> CreateReviewAsync(CreateReviewDto dto, string reviewerId)
@@ -129,6 +138,7 @@ namespace Hyre.API.Services
                 .Include(x => x.SkillReviews).ThenInclude(sr => sr.Skill)
                 .Include(x => x.Comments).ThenInclude(c => c.Commenter)
                 .FirstOrDefaultAsync(x => x.ReviewID == reviewId);
+            if (r == null) throw new Exception("Review not found.");
 
             var skills = r.SkillReviews.Select(sr => new ReviewedSkillDto(
                 sr.SkillId,
@@ -238,6 +248,49 @@ namespace Hyre.API.Services
             return response;
         }
 
+        public async Task<byte[]> GetCandidateResumeAsync(
+            int candidateId, string requesterId, int jobId, IEnumerable<string> userRoles)
+        {
+            var candidate = await _candidateRepository.GetCandidateByIdAsync(candidateId);
+            if (candidate == null)
+                throw new Exception("Candidate not found.");
+            
+            var job = await _jobService.GetJobByIdAsync(jobId);
+            if (job == null)
+            {
+                throw new Exception("Job not found");
+            }
+
+
+            bool isRecruiterOrAdmin = userRoles.Contains("Recruiter") ||
+                                      userRoles.Contains("Admin");
+
+            bool isReviewerAssigned = await _jobReviewerRepository
+                .IsReviewerAssignedToJobAsync(requesterId, jobId);
+
+            bool isCandidateLinked = await _candidateRepository
+                .IsCandidateLinkedToJobAsync(candidateId, jobId);
+
+            if (!isRecruiterOrAdmin)
+            {
+                if (!isCandidateLinked)
+                    throw new ForbiddenAccessException("Candidate is not linked to this job.");
+
+                if (!isReviewerAssigned)
+                    throw new ForbiddenAccessException("You are not assigned to this job.");
+            }
+            if (string.IsNullOrEmpty(candidate.ResumePath))
+                throw new Exception("No resume uploaded for this candidate.");
+
+            var resumePath = Path.Combine(_env.ContentRootPath, "PrivateFiles", candidate.ResumePath);
+            if (!File.Exists(resumePath))
+                throw new Exception("Resume file not found.");
+
+            var fileBytes = await File.ReadAllBytesAsync(resumePath);
+            //var fileName = Path.GetFileName(resumePath);
+
+            return fileBytes;
+        }
 
     }
 }
