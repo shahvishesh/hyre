@@ -22,12 +22,20 @@ namespace Hyre.API.Controllers
         [Authorize(Roles = "Recruiter,Admin,HR")]
         public async Task<IActionResult> AssignReviewers([FromBody] AssignReviewerDto dto)
         {
-            var recruiterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (recruiterId == null)
-                return Unauthorized();
+            try
+            {
 
-            await _service.AssignReviewersAsync(dto, recruiterId);
-            return Ok(new { message = "Reviewers assigned successfully" });
+                var recruiterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (recruiterId == null)
+                    return Unauthorized();
+
+                await _service.AssignReviewersAsync(dto, recruiterId);
+                return Ok(new { message = "Reviewers assigned successfully" });
+            }
+            catch (Exception ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
         }
 
         // Get assigned reviewers for a job
@@ -35,8 +43,15 @@ namespace Hyre.API.Controllers
         [Authorize(Roles = "Recruiter,Admin,HR")]
         public async Task<IActionResult> GetReviewersByJob(int jobId)
         {
-            var reviewers = await _service.GetJobReviewersAsync(jobId);
-            return Ok(reviewers);
+            try
+            {
+                var reviewers = await _service.GetJobReviewersAsync(jobId);
+                return Ok(reviewers);
+
+            }catch (Exception ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
         }
 
         // Remove reviewer
@@ -44,8 +59,15 @@ namespace Hyre.API.Controllers
         [Authorize(Roles = "Recruiter,Admin,HR")]
         public async Task<IActionResult> RemoveReviewer(int jobId, string reviewerId)
         {
-            await _service.RemoveReviewerAsync(jobId, reviewerId);
-            return Ok(new { message = "Reviewer removed successfully" });
+            try
+            {
+                await _service.RemoveReviewerAsync(jobId, reviewerId);
+                return Ok(new { message = "Reviewer removed successfully" });
+
+            }catch( Exception ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
         }
 
     }

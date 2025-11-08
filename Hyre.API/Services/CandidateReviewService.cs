@@ -1,4 +1,5 @@
 ﻿using Hyre.API.Data;
+using Hyre.API.Interfaces;
 using Hyre.API.Interfaces.CandidateReview;
 using Hyre.API.Models;
 using Microsoft.EntityFrameworkCore;
@@ -9,10 +10,13 @@ namespace Hyre.API.Services
     public class CandidateReviewService : ICandidateReviewService
     {
         private readonly ApplicationDbContext _context;
+        private readonly IJobService _jobService;
 
-        public CandidateReviewService(ApplicationDbContext context)
+
+        public CandidateReviewService(ApplicationDbContext context, IJobService jobService)
         {
             _context = context;
+            _jobService = jobService;
         }
 
         public async Task<ReviewResponseDto> CreateReviewAsync(CreateReviewDto dto, string reviewerId)
@@ -75,7 +79,7 @@ namespace Hyre.API.Services
             if (review.ReviewerId != reviewerId)
                 throw new UnauthorizedAccessException("Only the original reviewer can modify this review.");
 
-            review.Comment = dto.Comment;
+            review.Comment = dto.Comment ?? review.Comment;
             review.Decision = dto.Decision ?? review.Decision;
             review.ReviewedAt = DateTime.UtcNow;
 
@@ -123,12 +127,19 @@ namespace Hyre.API.Services
             var r = await _context.CandidateReviews
                 .Include(x => x.Reviewer)
                 .Include(x => x.SkillReviews).ThenInclude(sr => sr.Skill)
+                .Include(x => x.Comments).ThenInclude(c => c.Commenter)
                 .FirstOrDefaultAsync(x => x.ReviewID == reviewId);
 
             var skills = r.SkillReviews.Select(sr => new ReviewedSkillDto(
                 sr.SkillId,
                 sr.IsVerified,
                 sr.VerifiedYearsOfExperience
+            )).ToList();
+
+            var comments = r.Comments.Select(c => new CommentResponseDto(
+                $"{c.Commenter?.FirstName} {c.Commenter?.LastName}" ?? "Unknown",
+                c.CommentText,
+                c.CommentedAt
             )).ToList();
 
             return new ReviewResponseDto(
@@ -139,7 +150,8 @@ namespace Hyre.API.Services
                 r.Comment,
                 r.RecruiterDecision,
                 r.ReviewedAt,
-                skills
+                skills,
+                comments
             );
         }
 
@@ -181,11 +193,15 @@ namespace Hyre.API.Services
 
         public async Task<IEnumerable<ReviewResponseDto>> GetReviewsByJobAsync(int jobId)
         {
+            var job = await _jobService.GetJobByIdAsync(jobId);
+            if (job == null) throw new Exception("Job not found.");
+
             var reviews = await _context.CandidateReviews
                 .Include(r => r.Reviewer)
                 .Include(r => r.Recruiter)
                 .Include(r => r.CandidateJob)
                 .Include(r => r.SkillReviews).ThenInclude(sr => sr.Skill)
+                .Include(r => r.Comments).ThenInclude(c => c.Commenter)
                 .Where(r => r.CandidateJob.JobID == jobId)
                 .ToListAsync();
 
@@ -199,6 +215,13 @@ namespace Hyre.API.Services
                     sr.IsVerified,
                     sr.VerifiedYearsOfExperience
                 )).ToList();
+
+                var comments = review.Comments.Select(c => new CommentResponseDto(
+                    $"{c.Commenter?.FirstName} {c.Commenter?.LastName}" ?? "Unknown",
+                    c.CommentText,
+                    c.CommentedAt
+                )).ToList();
+
                 response.Add(new ReviewResponseDto(
                     review.ReviewID,
                     review.CandidateJobID,
@@ -207,7 +230,8 @@ namespace Hyre.API.Services
                     review.Comment,
                     review.RecruiterDecision,
                     review.ReviewedAt,
-                    skills
+                    skills,
+                    comments
                 ));
             }
 

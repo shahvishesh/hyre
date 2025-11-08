@@ -1,4 +1,6 @@
-﻿namespace Hyre.API.Dtos.CandidateReview
+﻿using Hyre.API.Models;
+
+namespace Hyre.API.Dtos.CandidateReview
 {
     public class ReviewDtos
     {
@@ -8,6 +10,7 @@
 
 
         public record AddCommentDto(int ReviewID, string CommentText);
+        public record CommentResponseDto(string name, string CommentText, DateTime CommentedAt);
 
         public record RecruiterDecisionDto(int ReviewID, string Decision);
 
@@ -25,7 +28,8 @@
             string? Comment,
             string? RecruiterDecision,
             DateTime ReviewedAt,
-            List<ReviewedSkillDto> Skills
+            List<ReviewedSkillDto> Skills,
+            List<CommentResponseDto> Comments
         );
 
     }

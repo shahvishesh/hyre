@@ -1,4 +1,5 @@
-﻿using Hyre.API.Interfaces.ReviewerJob;
+﻿using Hyre.API.Interfaces;
+using Hyre.API.Interfaces.ReviewerJob;
 using Hyre.API.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -13,13 +14,16 @@ namespace Hyre.API.Controllers
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IJobReviewerService _jobReviewerService;
+        private readonly IJobService _jobService;
 
         public UserRoleController(
             UserManager<ApplicationUser> userManager,
-            IJobReviewerService jobReviewerService)
+            IJobReviewerService jobReviewerService,
+            IJobService jobService)
         {
             _userManager = userManager;
             _jobReviewerService = jobReviewerService;
+            _jobService = jobService;
         }
 
 
@@ -27,6 +31,12 @@ namespace Hyre.API.Controllers
         [Authorize(Roles = "Recruiter,Admin,HR")]
         public async Task<IActionResult> GetAvailableReviewersForJob(int jobId)
         {
+
+            var job = await _jobService.GetJobByIdAsync(jobId);
+            if (job == null)
+            {
+                return NotFound(new { message = "Job not found" });
+            }
             var allReviewers = await _userManager.GetUsersInRoleAsync("Reviewer");
 
             var assignedReviewers = await _jobReviewerService.GetJobReviewersAsync(jobId);
