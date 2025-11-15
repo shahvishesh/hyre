@@ -1,4 +1,6 @@
-﻿namespace Hyre.API.Dtos
+﻿using Hyre.API.Dtos.InterviewRound;
+
+namespace Hyre.API.Dtos
 {
     public record JobResponseDto(
     int JobID,
@@ -12,6 +14,8 @@
     string WorkplaceType,
     string Status,
     DateTime CreatedAt,
-    List<JobSkillDetailDto> Skills
+    List<JobSkillDetailDto> Skills,
+    List<JobInterviewRoundTemplateDto> InterviewRounds  
 );
+
 }

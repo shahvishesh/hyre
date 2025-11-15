@@ -192,14 +192,63 @@ namespace Hyre.API.Services
             review.RecruiterActionAt = DateTime.UtcNow;
 
             // Recruiter may also move the candidate to the next stage
-            var candidateJob = await _context.CandidateJobs.FindAsync(review.CandidateJobID);
-            if (candidateJob != null)
+            var candidateJob = await _context.CandidateJobs.FindAsync(review.CandidateJobID) ?? throw new Exception("Candidate-job link not found.");
+
+            if (dto.Decision == "Shortlisted")
             {
-                candidateJob.Stage = dto.Decision == "Shortlisted" ? "Interview" : "Rejected";
+                candidateJob.Stage = "Interview";
+
+                await CloneInterviewRoundsAsync(candidateJob.CandidateID, candidateJob.JobID, recruiterId);
+            }
+            else if (dto.Decision == "Rejected")
+            {
+                candidateJob.Stage = "Rejected";
             }
 
             await _context.SaveChangesAsync();
         }
+
+        private async Task CloneInterviewRoundsAsync(int candidateId, int jobId, string recruiterId)
+        {
+            bool alreadyHasRounds = await _context.CandidateInterviewRounds
+                .AnyAsync(r => r.CandidateID == candidateId && r.JobID == jobId);
+
+            if (alreadyHasRounds)
+                return;
+
+
+            var templates = await _context.JobInterviewRoundTemplates
+                .Where(t => t.JobID == jobId)
+                .OrderBy(t => t.SequenceNo)
+                .ToListAsync();
+
+            if (!templates.Any())
+                return;  
+
+            foreach (var t in templates)
+            {
+                var round = new CandidateInterviewRound
+                {
+                    CandidateID = candidateId,
+                    JobID = jobId,
+                    SequenceNo = t.SequenceNo,
+                    RoundName = t.RoundName,
+                    RoundType = t.RoundType,
+                    DurationMinutes = t.DurationMinutes,
+                    InterviewMode = t.InterviewMode,
+                    IsPanelRound = t.IsPanelRound,
+                    RecruiterID = recruiterId,
+                    Status = "Pending",
+                    CreatedAt = DateTime.Now,
+                    UpdatedAt = DateTime.Now
+                };
+
+                _context.CandidateInterviewRounds.Add(round);
+            }
+
+            await _context.SaveChangesAsync();
+        }
+
 
         public async Task<IEnumerable<ReviewResponseDto>> GetReviewsByJobAsync(int jobId)
         {

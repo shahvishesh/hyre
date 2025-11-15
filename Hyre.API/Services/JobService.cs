@@ -1,5 +1,6 @@
 ﻿using Hyre.API.Data;
 using Hyre.API.Dtos;
+using Hyre.API.Dtos.InterviewRound;
 using Hyre.API.Interfaces;
 using Hyre.API.Models;
 using System;
@@ -48,6 +49,19 @@ namespace Hyre.API.Services
                 }
             }
 
+            foreach (var roundDto in dto.InterviewRounds)
+            {
+                job.InterviewRoundTemplates.Add(new JobInterviewRoundTemplate
+                {
+                    SequenceNo = roundDto.SequenceNo,
+                    RoundName = roundDto.RoundName,
+                    RoundType = roundDto.RoundType,
+                    DurationMinutes = roundDto.DurationMinutes,
+                    InterviewMode = roundDto.InterviewMode,
+                    IsPanelRound = roundDto.IsPanelRound
+                });
+            }
+
             var createdJob = await _jobRepository.AddAsync(job);
 
             return new JobResponseDto
@@ -68,7 +82,16 @@ namespace Hyre.API.Services
                     js.SkillID,
                     js.Skill.SkillName,
                     js.SkillType
-                )).ToList()
+                )).ToList(),
+                createdJob.InterviewRoundTemplates.Select(r =>
+                new JobInterviewRoundTemplateDto(
+                r.SequenceNo,
+                r.RoundName,
+                r.RoundType,
+                r.DurationMinutes,
+                r.InterviewMode,
+                r.IsPanelRound
+            )).ToList()
             );
         }
 
@@ -102,6 +125,15 @@ namespace Hyre.API.Services
                     js.SkillID,
                     js.Skill.SkillName,
                     js.SkillType
+                )).ToList(),
+                job.InterviewRoundTemplates.Select(r =>
+                new JobInterviewRoundTemplateDto(
+                    r.SequenceNo,
+                    r.RoundName,
+                    r.RoundType,
+                    r.DurationMinutes,
+                    r.InterviewMode,
+                    r.IsPanelRound
                 )).ToList()
             )).ToList();
         }
@@ -129,6 +161,15 @@ namespace Hyre.API.Services
                     js.SkillID,
                     js.Skill.SkillName,
                     js.SkillType
+                )).ToList(),
+                job.InterviewRoundTemplates.Select(r =>
+                new JobInterviewRoundTemplateDto(
+                    r.SequenceNo,
+                    r.RoundName,
+                    r.RoundType,
+                    r.DurationMinutes,
+                    r.InterviewMode,
+                    r.IsPanelRound
                 )).ToList()
             );
         }
@@ -203,6 +244,15 @@ namespace Hyre.API.Services
                     js.SkillID, 
                     js.Skill.SkillName, 
                     js.SkillType
+                )).ToList(),
+                job.InterviewRoundTemplates.Select(r =>
+                new JobInterviewRoundTemplateDto(
+                    r.SequenceNo,
+                    r.RoundName,
+                    r.RoundType,
+                    r.DurationMinutes,
+                    r.InterviewMode,
+                    r.IsPanelRound
                 )).ToList()
             );
         }

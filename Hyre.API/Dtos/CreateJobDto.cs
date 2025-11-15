@@ -1,6 +1,8 @@
-﻿namespace Hyre.API.Dtos
+﻿using Hyre.API.Dtos.InterviewRound;
+
+namespace Hyre.API.Dtos
 {
-    public record CreateJobDto(
+   public record CreateJobDto(
     string Title,
     string? Description,
     int? MinExperience,
@@ -9,6 +11,8 @@
     string? Location,
     string JobType,
     string WorkplaceType,
-    List<JobSkillDto> Skills
+    List<JobSkillDto> Skills,
+    List<CreateJobInterviewRoundDto> InterviewRounds   
 );
+
 }

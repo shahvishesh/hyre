@@ -44,5 +44,14 @@ namespace Hyre.API.Data
         public DbSet<CandidateSkillReview> CandidateSkillReviews { get; set; }
 
         public DbSet<JobReviewer> JobReviewers { get; set; }
+
+        public DbSet<JobInterviewRoundTemplate> JobInterviewRoundTemplates { get; set; }
+
+        public DbSet<JobInterviewer> JobInterviewers { get; set; }
+
+        public DbSet<CandidateInterviewRound> CandidateInterviewRounds { get; set; }
+
+        public DbSet<CandidatePanelMember> CandidatePanelMembers { get; set; }
+
     }
 }

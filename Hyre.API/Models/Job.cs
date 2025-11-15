@@ -53,5 +53,7 @@ namespace Hyre.API.Models
         public Candidate SelectedCandidate { get; set; }
 
         public ICollection<JobSkill> JobSkills { get; set; } = new List<JobSkill>();
+
+        public ICollection<JobInterviewRoundTemplate> InterviewRoundTemplates { get; set; } = new List<JobInterviewRoundTemplate>();
     }
 }
