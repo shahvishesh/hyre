@@ -85,6 +85,9 @@ builder.Services.AddScoped<IJobReviewerRepository, JobReviewerRepository>();
 builder.Services.AddScoped<IInterviewScheduleRepository, InterviewScheduleRepository>();
 builder.Services.AddScoped<IPanelSchedulingService, PanelSchedulingService>();
 
+builder.Services.AddScoped<ICandidateInterviewRepository, CandidateInterviewRepository>();
+builder.Services.AddScoped<ICandidateInterviewService, CandidateInterviewService>();
+
 builder.Services.AddAuthorization();
 
 
