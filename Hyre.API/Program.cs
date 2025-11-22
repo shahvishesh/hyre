@@ -1,3 +1,4 @@
+using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
 using Hyre.API.Data;
 using Hyre.API.Interfaces;
 using Hyre.API.Interfaces.Auth;
@@ -6,6 +7,7 @@ using Hyre.API.Interfaces.CandidateReview;
 using Hyre.API.Interfaces.Candidates;
 using Hyre.API.Interfaces.ReviewerJob;
 using Hyre.API.Interfaces.Role;
+using Hyre.API.Interfaces.Scheduling;
 using Hyre.API.Models;
 using Hyre.API.Repositories;
 using Hyre.API.Services;
@@ -79,6 +81,9 @@ builder.Services.AddScoped<ICandidateJobService, CandidateJobService>();
 builder.Services.AddScoped<ICandidateReviewService, CandidateReviewService>();
 builder.Services.AddScoped<IJobReviewerService, JobReviewerService>();
 builder.Services.AddScoped<IJobReviewerRepository, JobReviewerRepository>();
+
+builder.Services.AddScoped<IInterviewScheduleRepository, InterviewScheduleRepository>();
+builder.Services.AddScoped<IPanelSchedulingService, PanelSchedulingService>();
 
 builder.Services.AddAuthorization();
 
