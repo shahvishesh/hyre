@@ -365,3 +365,5 @@ FodyWeavers.xsd
 appsettings.Development.json
 
 PrivateFiles/
+/Hyre.API/Services/Test.cs
+/Hyre.API/Services/TestService.cs

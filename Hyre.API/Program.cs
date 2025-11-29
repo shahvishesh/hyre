@@ -88,6 +88,10 @@ builder.Services.AddScoped<IPanelSchedulingService, PanelSchedulingService>();
 builder.Services.AddScoped<ICandidateInterviewRepository, CandidateInterviewRepository>();
 builder.Services.AddScoped<ICandidateInterviewService, CandidateInterviewService>();
 
+builder.Services.AddScoped<ICandidateRoundRepository, CandidateRoundRepository>();
+builder.Services.AddScoped<ICandidateRoundService, CandidateRoundService>();
+
+
 builder.Services.AddAuthorization();
 
 

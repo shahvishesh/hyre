@@ -37,6 +37,15 @@ namespace Hyre.API.Repositories
                 .ToListAsync();
         }
 
+        public async Task<List<JobInterviewer>> GetAssignedByRoleAsync(int jobId, string role)
+        {
+            return await _context.JobInterviewers
+                .Include(x => x.Interviewer)
+                .Where(x => x.JobID == jobId && x.Role == role && x.IsActive)
+                .ToListAsync();
+        }
+
+
         public async Task AddAsync(JobInterviewer entity)
         {
             _context.JobInterviewers.Add(entity);

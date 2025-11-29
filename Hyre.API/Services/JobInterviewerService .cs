@@ -57,5 +57,21 @@ namespace Hyre.API.Services
                 x.AssignedAt
             )).ToList();
         }
+
+        public async Task<List<JobInterviewerDto>> GetInterviewersByRoleAsync(int jobId, string role)
+        {
+            var list = await _repo.GetAssignedByRoleAsync(jobId, role);
+
+            return list.Select(x => new JobInterviewerDto(
+                x.InterviewerID,
+                x.Interviewer.FirstName,
+                x.Interviewer.LastName,
+                x.Interviewer.Email,
+                x.Role,
+                x.SkillArea,
+                x.AssignedAt
+            )).ToList();
+        }
+
     }
 }

@@ -25,4 +25,31 @@
         DateTime ScheduledEnd,
         string MeetingLink
     );
+
+    public record CandidateRoundDto(
+        int? CandidateRoundId,
+        int SequenceNo,
+        string RoundName,
+        string RoundType,
+        bool IsPanelRound,
+        List<string> InterviewerIds,
+        string InterviewMode,
+        DateTime? ScheduledDate,
+        TimeSpan? StartTime,
+        int DurationMinutes,
+        string Status,
+        string? ClientTempId 
+    );
+
+    public record CandidateRoundsUpdateDto(
+        int CandidateId,
+        int JobId,
+        List<CandidateRoundDto> Rounds
+    );
+
+    public record UpsertRoundResponseDto(
+        List<CandidateRoundDto> Rounds,
+        Dictionary<string, int> TempIdMap
+    );
+
 }
