@@ -3,6 +3,7 @@ using Hyre.API.Data;
 using Hyre.API.Dtos.Candidate;
 using Hyre.API.Interfaces.Candidates;
 using Hyre.API.Models;
+using Hyre.API.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 namespace Hyre.API.Services
@@ -183,6 +184,12 @@ namespace Hyre.API.Services
             await resumeFile.CopyToAsync(stream);
 
             return Path.Combine("Resumes", $"Candidate_{candidateId}", fileName).Replace("\\", "/");
+        }
+
+        public async Task<bool> CandidateExistsAsync(int candidateId)
+        {
+            var candidate = await _repository.GetCandidateByIdAsync(candidateId);
+            return candidate != null;
         }
     }
 

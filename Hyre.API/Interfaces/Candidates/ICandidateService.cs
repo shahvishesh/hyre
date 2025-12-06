@@ -6,5 +6,7 @@ namespace Hyre.API.Interfaces.Candidates
     {
         Task<CandidateDto> CreateCandidateAsync(CreateCandidateDto dto, String createdByUserId, IFormFile? resumeFile = null);
         Task ImportFromWorkbookAsync(IFormFile file, string createdByUserId);
+
+        Task<bool> CandidateExistsAsync(int candidateId);
     }
 }

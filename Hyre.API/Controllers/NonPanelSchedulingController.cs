@@ -28,9 +28,9 @@ namespace Hyre.API.Controllers
             {
                 return BadRequest(new { message = ex.Message });
             }
-            catch
+            catch(Exception ex) 
             {
-                return StatusCode(500, new { message = "Internal server error." });
+                return BadRequest(new { message = ex.Message });
             }
         }
     }

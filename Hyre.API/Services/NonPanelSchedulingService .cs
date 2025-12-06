@@ -1,5 +1,9 @@
-﻿using Hyre.API.Dtos.Scheduling;
+﻿using DocumentFormat.OpenXml.Bibliography;
+using Hyre.API.Dtos.Scheduling;
+using Hyre.API.Interfaces.Candidates;
 using Hyre.API.Interfaces.Scheduling;
+using Hyre.API.Models;
+using Microsoft.AspNetCore.Identity;
 
 namespace Hyre.API.Services
 {
@@ -12,16 +16,31 @@ namespace Hyre.API.Services
         private readonly TimeSpan BreakGap = TimeSpan.FromMinutes(30);
         private readonly TimeSpan Granularity = TimeSpan.FromMinutes(15);
         private const int MaxInterviewsPerDay = 3;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly ICandidateService _candidateService;
 
-        public NonPanelSchedulingService(IInterviewScheduleRepository repo)
+
+        public NonPanelSchedulingService(IInterviewScheduleRepository repo, UserManager<ApplicationUser> userManager, ICandidateService candidateService)
         {
             _repo = repo;
+            _userManager = userManager;
+            _candidateService = candidateService;
         }
 
         public async Task<List<AvailableSlotDto>> GetAvailableSlotsAsync(NonPanelAvailabilityRequestDto request)
         {
             var date = request.Date.Date;
             ValidateDateRules(date);
+
+            var user = await _userManager.FindByIdAsync(request.InterviewerId);
+            if (user == null)
+            {
+                throw new Exception($"Interviewer with ID {request.InterviewerId} not found");
+            }
+
+            var candidateExists = await _candidateService.CandidateExistsAsync(request.CandidateId);
+            if (!candidateExists)
+                throw new Exception($"Candidate with ID {request.CandidateId} not found");
 
             var interviewerCount = await _repo.CountInterviewerInterviewsOnDateAsync(request.InterviewerId, date);
             if (interviewerCount >= MaxInterviewsPerDay)

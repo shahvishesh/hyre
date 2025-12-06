@@ -21,37 +21,65 @@ namespace Hyre.API.Controllers
         [HttpPost("assign")]
         public async Task<IActionResult> AssignInterviewers([FromBody] AssignInterviewersDto dto)
         {
-            var recruiterId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            try
+            {
 
-            await _service.AssignInterviewersAsync(dto, recruiterId);
+                var recruiterId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            return Ok(new { message = "Interviewers assigned successfully." });
+                await _service.AssignInterviewersAsync(dto, recruiterId);
+
+                return Ok(new { message = "Interviewers assigned successfully." });
+            }catch(Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         [HttpGet("{jobId}")]
         public async Task<IActionResult> GetAssignedInterviewers(int jobId)
         {
-            var list = await _service.GetAssignedInterviewersAsync(jobId);
-            return Ok(list);
+            try
+            {
+                var list = await _service.GetAssignedInterviewersAsync(jobId);
+                return Ok(list);
+
+            }catch(Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         [HttpGet("{jobId}/interviewers")]
         [Authorize(Roles = "Recruiter,Admin,HR")]
         public async Task<IActionResult> GetInterviewers(int jobId, [FromQuery] string role)
         {
-            if (string.IsNullOrEmpty(role))
-                return BadRequest("Role must be provided. Example: ?role=Technical");
+            try
+            {
+                if (string.IsNullOrEmpty(role))
+                    return BadRequest("Role must be provided. Example: ?role=Technical");
 
-            var result = await _service.GetInterviewersByRoleAsync(jobId, role);
-            return Ok(result);
+                var result = await _service.GetInterviewersByRoleAsync(jobId, role);
+                return Ok(result);
+
+            }catch(Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
 
         [HttpDelete("remove")]
         public async Task<IActionResult> RemoveInterviewer([FromQuery] int jobId, [FromQuery] string interviewerId)
         {
-            await _service.RemoveInterviewerAsync(jobId, interviewerId);
-            return Ok(new { message = "Interviewer removed successfully." });
+            try
+            {
+                await _service.RemoveInterviewerAsync(jobId, interviewerId);
+                return Ok(new { message = "Interviewer removed successfully." });
+
+            }catch(Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
     }
 }

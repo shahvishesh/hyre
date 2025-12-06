@@ -8,7 +8,8 @@
         string InterviewMode,
         DateTime? ScheduledDate,     
         TimeSpan? StartTime,
-        int DurationMinutes
+        int DurationMinutes,
+        string RoundType
     );
 
     public record CreateCandidateInterviewDto(

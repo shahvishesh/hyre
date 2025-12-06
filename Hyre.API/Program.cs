@@ -5,6 +5,7 @@ using Hyre.API.Interfaces.Auth;
 using Hyre.API.Interfaces.CandidateMatching;
 using Hyre.API.Interfaces.CandidateReview;
 using Hyre.API.Interfaces.Candidates;
+using Hyre.API.Interfaces.InterviewerJob;
 using Hyre.API.Interfaces.ReviewerJob;
 using Hyre.API.Interfaces.Role;
 using Hyre.API.Interfaces.Scheduling;
@@ -85,12 +86,16 @@ builder.Services.AddScoped<IJobReviewerRepository, JobReviewerRepository>();
 builder.Services.AddScoped<IInterviewScheduleRepository, InterviewScheduleRepository>();
 builder.Services.AddScoped<IPanelSchedulingService, PanelSchedulingService>();
 
+builder.Services.AddScoped<INonPanelSchedulingService, NonPanelSchedulingService>();
+
 builder.Services.AddScoped<ICandidateInterviewRepository, CandidateInterviewRepository>();
 builder.Services.AddScoped<ICandidateInterviewService, CandidateInterviewService>();
 
 builder.Services.AddScoped<ICandidateRoundRepository, CandidateRoundRepository>();
 builder.Services.AddScoped<ICandidateRoundService, CandidateRoundService>();
 
+builder.Services.AddScoped<IJobInterviewerRepository, JobInterviewerRepository>();
+builder.Services.AddScoped<IJobInterviewerService, JobInterviewerService>();
 
 builder.Services.AddAuthorization();
 

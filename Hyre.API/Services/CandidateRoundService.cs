@@ -1,7 +1,11 @@
-﻿using Hyre.API.Data;
+﻿using Azure.Core;
+using Hyre.API.Data;
 using Hyre.API.Dtos.Scheduling;
+using Hyre.API.Interfaces;
+using Hyre.API.Interfaces.Candidates;
 using Hyre.API.Interfaces.Scheduling;
 using Hyre.API.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace Hyre.API.Services
@@ -11,16 +15,30 @@ namespace Hyre.API.Services
         private readonly ICandidateRoundRepository _roundRepo;
         private readonly ApplicationDbContext _context;
         private readonly ICandidateInterviewService _interviewService;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly ICandidateService _candidateService;
+        private readonly IJobService _jobService;
 
-        public CandidateRoundService(ICandidateRoundRepository roundRepo, ApplicationDbContext context, ICandidateInterviewService interviewService)
+        public CandidateRoundService(ICandidateRoundRepository roundRepo, ApplicationDbContext context, ICandidateInterviewService interviewService, UserManager<ApplicationUser> userManager, ICandidateService candidateService, IJobService jobService)
         {
             _roundRepo = roundRepo;
             _context = context;
             _interviewService = interviewService;
+            _userManager = userManager;
+            _candidateService = candidateService;
+            _jobService = jobService;
         }
 
         public async Task<List<CandidateRoundDto>> GetCandidateRoundsAsync(int candidateId, int jobId)
         {
+            var candidateExists = await _candidateService.CandidateExistsAsync(candidateId);
+            if (!candidateExists)
+                throw new Exception($"Candidate with ID {candidateId} not found");
+
+            var job = await _jobService.GetJobByIdAsync(jobId);
+            if (job == null)
+                throw new Exception($"Job with ID {jobId} not found");
+
             var rounds = await _roundRepo.GetByCandidateAndJobAsync(candidateId, jobId);
             return rounds.Select(r => new CandidateRoundDto(
                 r.CandidateRoundID,
@@ -41,6 +59,14 @@ namespace Hyre.API.Services
         public async Task<UpsertRoundResponseDto> UpsertCandidateRoundsAsync(CandidateRoundsUpdateDto dto, string recruiterId)
         {
             if (dto == null) throw new ArgumentNullException(nameof(dto));
+
+            var candidateExists = await _candidateService.CandidateExistsAsync(dto.CandidateId);
+            if (!candidateExists)
+                throw new Exception($"Candidate with ID {dto.CandidateId} not found");
+
+            var job = await _jobService.GetJobByIdAsync(dto.JobId);
+            if (job == null)
+                throw new Exception($"Job with ID {dto.JobId} not found");
 
             using var tx = await _context.Database.BeginTransactionAsync();
             try
@@ -92,6 +118,23 @@ namespace Hyre.API.Services
                     dbRound.UpdatedAt = DateTime.UtcNow;
                     dbRound.RecruiterID = recruiterId;
 
+                    /**/
+                    // Handle meeting link based on interview mode
+                    if (!string.IsNullOrEmpty(inc.InterviewMode) &&
+                        inc.InterviewMode.Equals("Online", StringComparison.OrdinalIgnoreCase))
+                    {
+                        // Generate meeting link if it's an online interview and doesn't have one
+                        if (string.IsNullOrEmpty(dbRound.MeetingLink))
+                        {
+                            dbRound.MeetingLink = GenerateJitsiLink(dto.JobId, dto.CandidateId, dbRound.CandidateRoundID);
+                        }
+                    }
+                    else
+                    {
+                        dbRound.MeetingLink = null;
+                    }
+                    /**/
+
                     // Update panel members
                     if (dbRound.IsPanelRound)
                     {
@@ -120,16 +163,32 @@ namespace Hyre.API.Services
 
                 foreach (var inc in newIncoming)
                 {
-                    var roundCreate = new RoundCreateDto(inc.SequenceNo, inc.RoundName, inc.IsPanelRound, inc.InterviewerIds ?? new List<string>(), inc.InterviewMode, inc.ScheduledDate, inc.StartTime, inc.DurationMinutes);
+                    var roundCreate = new RoundCreateDto(inc.SequenceNo, inc.RoundName, inc.IsPanelRound, inc.InterviewerIds ?? new List<string>(), inc.InterviewMode, inc.ScheduledDate, inc.StartTime, inc.DurationMinutes, inc.RoundType);
                     var created = await _interviewService.ScheduleSingleRoundAsync(roundCreate, dto.CandidateId, dto.JobId, recruiterId, saveChanges: false);
                     createdEntities.Add(created);
 
-                    // MAP CLIENT TEMP ID → REAL DB ID
+                   /* // MAP CLIENT TEMP ID → REAL DB ID
                     if (!string.IsNullOrEmpty(inc.ClientTempId))
-                        tempIdMap[inc.ClientTempId] = created.CandidateRoundID;
+                        tempIdMap[inc.ClientTempId] = created.CandidateRoundID;*/
                 }
 
                 await _context.SaveChangesAsync();
+
+                for (int i = 0; i < newIncoming.Count; i++)
+                {
+                    var inc = newIncoming[i];
+                    var created = createdEntities[i];
+
+                    if (!string.IsNullOrEmpty(inc.ClientTempId))
+                        tempIdMap[inc.ClientTempId] = created.CandidateRoundID;
+
+                    if (string.IsNullOrEmpty(created.MeetingLink) &&
+                        !string.IsNullOrEmpty(created.InterviewMode) &&
+                        created.InterviewMode.Equals("Online", StringComparison.OrdinalIgnoreCase))
+                    {
+                        created.MeetingLink = GenerateJitsiLink(dto.JobId, dto.CandidateId, created.CandidateRoundID);
+                    }
+                }
 
                 var finalRounds = await _context.CandidateInterviewRounds.Include(r => r.PanelMembers)
                     .Where(r => r.CandidateID == dto.CandidateId && r.JobID == dto.JobId)
@@ -148,20 +207,30 @@ namespace Hyre.API.Services
                 await _context.SaveChangesAsync();
                 await tx.CommitAsync();
 
-                var resultRounds =  finalRounds.Select(r => new CandidateRoundDto(
-                    r.CandidateRoundID,
-                    r.SequenceNo,
-                    r.RoundName,
-                    r.RoundType,
-                    r.IsPanelRound,
-                    r.PanelMembers?.Select(pm => pm.InterviewerID).ToList() ?? new List<string>(),
-                    r.InterviewMode,
-                    r.ScheduledDate,
-                    r.StartTime,
-                    r.DurationMinutes ?? 0,
-                    r.Status,
-                    null
-                )).ToList();
+                var resultRounds = finalRounds.Select(r =>
+                {
+                    var panelIds = r.PanelMembers?
+                        .Select(pm => pm.InterviewerID)
+                        .ToList() ?? new List<string>();
+
+                    panelIds.Add(r.InterviewerID);
+
+                    return new CandidateRoundDto(
+                        r.CandidateRoundID,
+                        r.SequenceNo,
+                        r.RoundName,
+                        r.RoundType,
+                        r.IsPanelRound,
+                        panelIds,
+                        r.InterviewMode,
+                        r.ScheduledDate,
+                        r.StartTime,
+                        r.DurationMinutes ?? 0,
+                        r.Status,
+                        null
+                    );
+                }).ToList();
+
 
                 return new UpsertRoundResponseDto(resultRounds, tempIdMap);
             }
@@ -170,6 +239,12 @@ namespace Hyre.API.Services
                 await tx.RollbackAsync();
                 throw;
             }
+        }
+
+        private string GenerateJitsiLink(int jobId, int candidateId, int roundId)
+        {
+            var token = Guid.NewGuid().ToString("n").Substring(0, 8);
+            return $"https://meet.jit.si/hyre-job{jobId}-cand{candidateId}-r{roundId}-{token}";
         }
     }
 }

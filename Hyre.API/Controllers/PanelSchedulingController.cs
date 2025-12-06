@@ -31,7 +31,7 @@ namespace Hyre.API.Controllers
             catch (Exception ex)
             {
                 // log ex
-                return StatusCode(500, new { message = "Something went wrong." });
+                return StatusCode(500, new { message = ex.Message });
             }
         }
     }

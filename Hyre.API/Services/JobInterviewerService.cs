@@ -1,4 +1,5 @@
 ﻿using Hyre.API.Dtos.InterviewerJob;
+using Hyre.API.Interfaces;
 using Hyre.API.Interfaces.InterviewerJob;
 using Hyre.API.Models;
 using Microsoft.AspNetCore.Identity;
@@ -9,21 +10,38 @@ namespace Hyre.API.Services
     {
         private readonly IJobInterviewerRepository _repo;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IJobService _jobService;
+
 
         public JobInterviewerService(
             IJobInterviewerRepository repo,
-            UserManager<ApplicationUser> userManager)
+            UserManager<ApplicationUser> userManager,
+            IJobService jobService)
         {
             _repo = repo;
             _userManager = userManager;
+            _jobService = jobService;
         }
 
         public async Task AssignInterviewersAsync(AssignInterviewersDto dto, string recruiterId)
         {
+
+            var job = await _jobService.GetJobByIdAsync(dto.JobID);
+            if (job == null)
+            {
+                throw new Exception("Job not found");
+            }
+
             foreach (var interviewerId in dto.InterviewerIDs)
             {
                 if (await _repo.ExistsAsync(dto.JobID, interviewerId))
                     continue;
+
+                var user = await _userManager.FindByIdAsync(interviewerId);
+                if (user == null)
+                {
+                    throw new Exception($"Interviewer with ID {interviewerId} not found");
+                }
 
                 var entity = new JobInterviewer
                 {
@@ -40,11 +58,29 @@ namespace Hyre.API.Services
 
         public async Task RemoveInterviewerAsync(int jobId, string interviewerId)
         {
+            var user = await _userManager.FindByIdAsync(interviewerId);
+            if (user == null)
+            {
+                throw new Exception($"Interviewer with ID {interviewerId} not found");
+            }
+
+            var job = await _jobService.GetJobByIdAsync(jobId);
+            if (job == null)
+            {
+                throw new Exception("Job not found");
+            }
+
             await _repo.RemoveAsync(jobId, interviewerId);
         }
 
         public async Task<List<JobInterviewerDto>> GetAssignedInterviewersAsync(int jobId)
         {
+            var job = await _jobService.GetJobByIdAsync(jobId);
+            if (job == null)
+            {
+                throw new Exception("Job not found");
+            }
+
             var list = await _repo.GetAssignedAsync(jobId);
 
             return list.Select(x => new JobInterviewerDto(
@@ -60,6 +96,12 @@ namespace Hyre.API.Services
 
         public async Task<List<JobInterviewerDto>> GetInterviewersByRoleAsync(int jobId, string role)
         {
+            var job = await _jobService.GetJobByIdAsync(jobId);
+            if (job == null)
+            {
+                throw new Exception("Job not found");
+            }
+
             var list = await _repo.GetAssignedByRoleAsync(jobId, role);
 
             return list.Select(x => new JobInterviewerDto(

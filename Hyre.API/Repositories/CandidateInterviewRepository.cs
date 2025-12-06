@@ -24,7 +24,7 @@ namespace Hyre.API.Repositories
             await _context.CandidatePanelMembers.AddRangeAsync(members);
         }
 
-        public async Task<bool> IsInterviewerAvailableAsync(string interviewerId, DateTime startUtc, DateTime endUtc)
+        /*public async Task<bool> IsInterviewerAvailableAsync(string interviewerId, DateTime startUtc, DateTime endUtc)
         {
             // Check single-interviewer rounds where interviewer is directly assigned
             var conflictSingle = await _context.CandidateInterviewRounds
@@ -44,16 +44,68 @@ namespace Hyre.API.Repositories
                                 && (pm.CandidateRound.ScheduledDate.Value.Date + pm.CandidateRound.StartTime.Value).AddMinutes(pm.CandidateRound.DurationMinutes ?? 0) > startUtc);
 
             return !conflictPanel;
+        }*/
+
+        public async Task<bool> IsInterviewerAvailableAsync(string interviewerId, DateTime startUtc, DateTime endUtc)
+        {
+            // 1. Check single-interviewer rounds
+            var singleRounds = await _context.CandidateInterviewRounds
+                .Where(r => r.InterviewerID == interviewerId && r.ScheduledDate.HasValue)
+                .Select(r => new
+                {
+                    Start = r.ScheduledDate.Value.Date + r.StartTime.Value,
+                    End = (r.ScheduledDate.Value.Date + r.StartTime.Value)
+                            .AddMinutes(r.DurationMinutes.HasValue ? r.DurationMinutes.Value : 0)
+                })
+                .ToListAsync();
+
+            if (singleRounds.Any(r => r.Start < endUtc && r.End > startUtc))
+                return false;
+
+            // 2. Check panel rounds
+            var panelRounds = await _context.CandidatePanelMembers
+                .Where(pm => pm.InterviewerID == interviewerId &&
+                             pm.CandidateRound.ScheduledDate.HasValue)
+                .Select(pm => new
+                {
+                    Start = pm.CandidateRound.ScheduledDate.Value.Date + pm.CandidateRound.StartTime.Value,
+                    End = (pm.CandidateRound.ScheduledDate.Value.Date + pm.CandidateRound.StartTime.Value)
+                            .AddMinutes(pm.CandidateRound.DurationMinutes.HasValue ?
+                                                    pm.CandidateRound.DurationMinutes.Value : 0)
+                })
+                .ToListAsync();
+
+            return !panelRounds.Any(r => r.Start < endUtc && r.End > startUtc);
         }
 
-        public async Task<bool> IsCandidateAvailableAsync(int candidateId, DateTime startUtc, DateTime endUtc)
+
+        /*public async Task<bool> IsCandidateAvailableAsync(int candidateId, DateTime startUtc, DateTime endUtc)
         {
             return !await _context.CandidateInterviewRounds
                 .AnyAsync(r => r.CandidateID == candidateId
                                && r.ScheduledDate.HasValue
                                && (r.ScheduledDate.Value.Date + r.StartTime.Value) < endUtc
                                && (r.ScheduledDate.Value.Date + r.StartTime.Value).AddMinutes(r.DurationMinutes ?? 0) > startUtc);
+        }*/
+
+        public async Task<bool> IsCandidateAvailableAsync(int candidateId, DateTime startUtc, DateTime endUtc)
+        {
+            var rounds = await _context.CandidateInterviewRounds
+                .Where(r => r.CandidateID == candidateId && r.ScheduledDate.HasValue)
+                .Select(r => new
+                {
+                    Start = r.ScheduledDate.Value.Date + r.StartTime.Value,
+                    End = (r.ScheduledDate.Value.Date + r.StartTime.Value)
+                            .AddMinutes(r.DurationMinutes.HasValue ? r.DurationMinutes.Value : 0)
+                })
+                .ToListAsync();
+
+            return !rounds.Any(r =>
+                r.Start < endUtc &&
+                r.End > startUtc
+            );
         }
+
 
         public async Task<int> CountInterviewerInterviewsOnDateAsync(string interviewerId, DateTime date)
         {

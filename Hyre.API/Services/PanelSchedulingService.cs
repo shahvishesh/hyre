@@ -1,5 +1,8 @@
 ﻿using Hyre.API.Dtos.Scheduling;
+using Hyre.API.Interfaces.Candidates;
 using Hyre.API.Interfaces.Scheduling;
+using Hyre.API.Models;
+using Microsoft.AspNetCore.Identity;
 
 namespace Hyre.API.Services
 {
@@ -11,10 +14,14 @@ namespace Hyre.API.Services
         private readonly TimeSpan BreakGap = TimeSpan.FromMinutes(30); // required break
         private readonly TimeSpan Granularity = TimeSpan.FromMinutes(15); // slot step
         private readonly int MaxInterviewsPerDay = 3;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly ICandidateService _candidateService;
 
-        public PanelSchedulingService(IInterviewScheduleRepository repo)
+        public PanelSchedulingService(IInterviewScheduleRepository repo, UserManager<ApplicationUser> userManager, ICandidateService candidateService)
         {
             _repo = repo;
+            _userManager = userManager;
+            _candidateService = candidateService;
         }
 
         public async Task<List<AvailableSlotDto>> GetAvailablePanelSlotsAsync(PanelAvailabilityRequestDto request)
@@ -22,11 +29,21 @@ namespace Hyre.API.Services
             var date = request.Date.Date;
             ValidateDateConstraints(date);
 
+            var candidateExists = await _candidateService.CandidateExistsAsync(request.CandidateId);
+            if (!candidateExists)
+                throw new Exception($"Candidate with ID {request.CandidateId} not found");
+
             if (await _repo.CountCandidateInterviewsOnDateAsync(request.CandidateId, date) >= MaxInterviewsPerDay)
                 return new List<AvailableSlotDto>();
 
             foreach (var interviewerId in request.InterviewerIds.Distinct())
             {
+                var user = await _userManager.FindByIdAsync(interviewerId);
+                if (user == null)
+                {
+                    throw new Exception($"Interviewer with ID {interviewerId} not found");
+                }
+
                 if (await _repo.CountInterviewerInterviewsOnDateAsync(interviewerId, date) >= MaxInterviewsPerDay)
                     return new List<AvailableSlotDto>();
             }

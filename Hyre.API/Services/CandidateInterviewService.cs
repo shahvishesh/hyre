@@ -128,10 +128,18 @@ namespace Hyre.API.Services
                     await _repo.SaveChangesAsync();
                 }
 
-                // Generate meeting link
-                var meetingLink = GenerateJitsiLink(dto.JobId, dto.CandidateId, roundEntity.CandidateRoundID);
-                roundEntity.MeetingLink = meetingLink;
-                await _repo.SaveChangesAsync();
+                /* // Generate meeting link
+                 var meetingLink = GenerateJitsiLink(dto.JobId, dto.CandidateId, roundEntity.CandidateRoundID);
+                 roundEntity.MeetingLink = meetingLink;
+                 await _repo.SaveChangesAsync();*/
+
+                string? meetingLink = null;
+                if (roundEntity.CandidateRoundID > 0)
+                {
+                    meetingLink = GenerateJitsiLink(dto.JobId, dto.CandidateId, roundEntity.CandidateRoundID, roundEntity.InterviewMode);
+                    roundEntity.MeetingLink = meetingLink;
+                    await _repo.SaveChangesAsync();
+                }
 
                 results.Add(new ScheduleResultDto(
                     roundEntity.CandidateRoundID,
@@ -192,9 +200,17 @@ namespace Hyre.API.Services
                 await _repo.AddCandidateInterviewRoundAsync(hrEntity);
                 await _repo.SaveChangesAsync();
 
-                var meetingLink = GenerateJitsiLink(dto.JobId, dto.CandidateId, hrEntity.CandidateRoundID);
+                /*var meetingLink = GenerateJitsiLink(dto.JobId, dto.CandidateId, hrEntity.CandidateRoundID);
                 hrEntity.MeetingLink = meetingLink;
-                await _repo.SaveChangesAsync();
+                await _repo.SaveChangesAsync();*/
+
+                string? meetingLink = null;
+                if (hrEntity.CandidateRoundID > 0)
+                {
+                    meetingLink = GenerateJitsiLink(dto.JobId, dto.CandidateId, hrEntity.CandidateRoundID, hrEntity.InterviewMode);
+                    hrEntity.MeetingLink = meetingLink;
+                    await _repo.SaveChangesAsync();
+                }
 
                 results.Add(new ScheduleResultDto(
                     hrEntity.CandidateRoundID,
@@ -215,6 +231,22 @@ namespace Hyre.API.Services
             if (roundDto == null) throw new ArgumentNullException(nameof(roundDto));
             if (!roundDto.ScheduledDate.HasValue || !roundDto.StartTime.HasValue) throw new InvalidOperationException("Round must have ScheduledDate and StartTime.");
 
+            /**/
+            bool isHrRound = roundDto.RoundType.Equals("HR", StringComparison.OrdinalIgnoreCase);
+            bool isTechnicalRound = roundDto.RoundType.Equals("Technical", StringComparison.OrdinalIgnoreCase);
+
+            if (isHrRound)
+            {
+                if (roundDto.InterviewerIds == null || roundDto.InterviewerIds.Count != 1)
+                    throw new InvalidOperationException("HR round must have exactly one interviewer.");
+            }
+
+            if (!isHrRound)
+            {
+                if (roundDto.InterviewerIds == null || !roundDto.InterviewerIds.Any())
+                    throw new InvalidOperationException("Technical round must have at least one interviewer.");
+            }
+
             var scheduledStart = roundDto.ScheduledDate.Value.Date + roundDto.StartTime.Value;
             var scheduledEnd = scheduledStart.AddMinutes(roundDto.DurationMinutes);
 
@@ -227,10 +259,27 @@ namespace Hyre.API.Services
             if (candCount >= MaxInterviewsPerDay)
                 throw new InvalidOperationException($"Candidate already has {MaxInterviewsPerDay} interviews on {scheduledStart.Date:d}");
 
-            if (roundDto.IsPanelRound)
+            /**/
+            if (!isHrRound) // can be single or panel
             {
-                foreach (var interviewerId in roundDto.InterviewerIds.Distinct())
+                if (roundDto.IsPanelRound)
                 {
+                    foreach (var interviewerId in roundDto.InterviewerIds.Distinct())
+                    {
+                        var count = await _repo.CountInterviewerInterviewsOnDateAsync(interviewerId, scheduledStart.Date);
+                        if (count >= MaxInterviewsPerDay)
+                            throw new InvalidOperationException($"Interviewer {interviewerId} already has {MaxInterviewsPerDay} interviews on {scheduledStart.Date:d}");
+
+                        var startWithBeforeBuffer = scheduledStart - BreakGap;
+                        var endWithAfterBuffer = scheduledEnd + BreakGap;
+                        if (!await _repo.IsInterviewerAvailableAsync(interviewerId, startWithBeforeBuffer, endWithAfterBuffer))
+                            throw new InvalidOperationException($"Interviewer {interviewerId} is not available for panel round at {scheduledStart}.");
+                    }
+                }
+                else
+                {
+                    var interviewerId = roundDto.InterviewerIds?.FirstOrDefault()
+                        ?? throw new InvalidOperationException("Single interviewer round must contain one interviewer.");
                     var count = await _repo.CountInterviewerInterviewsOnDateAsync(interviewerId, scheduledStart.Date);
                     if (count >= MaxInterviewsPerDay)
                         throw new InvalidOperationException($"Interviewer {interviewerId} already has {MaxInterviewsPerDay} interviews on {scheduledStart.Date:d}");
@@ -238,45 +287,54 @@ namespace Hyre.API.Services
                     var startWithBeforeBuffer = scheduledStart - BreakGap;
                     var endWithAfterBuffer = scheduledEnd + BreakGap;
                     if (!await _repo.IsInterviewerAvailableAsync(interviewerId, startWithBeforeBuffer, endWithAfterBuffer))
-                        throw new InvalidOperationException($"Interviewer {interviewerId} is not available for panel round at {scheduledStart}.");
+                        throw new InvalidOperationException($"Interviewer {interviewerId} is not available for round at {scheduledStart}.");
                 }
             }
             else
             {
-                var interviewerId = roundDto.InterviewerIds?.FirstOrDefault()
-                    ?? throw new InvalidOperationException("Single interviewer round must contain one interviewer.");
-                var count = await _repo.CountInterviewerInterviewsOnDateAsync(interviewerId, scheduledStart.Date);
-                if (count >= MaxInterviewsPerDay)
-                    throw new InvalidOperationException($"Interviewer {interviewerId} already has {MaxInterviewsPerDay} interviews on {scheduledStart.Date:d}");
+                var hrInterviewer = roundDto.InterviewerIds!.First(); // ALWAYS one
 
-                var startWithBeforeBuffer = scheduledStart - BreakGap;
-                var endWithAfterBuffer = scheduledEnd + BreakGap;
-                if (!await _repo.IsInterviewerAvailableAsync(interviewerId, startWithBeforeBuffer, endWithAfterBuffer))
-                    throw new InvalidOperationException($"Interviewer {interviewerId} is not available for round at {scheduledStart}.");
+                var cnt = await _repo.CountInterviewerInterviewsOnDateAsync(hrInterviewer, scheduledStart.Date);
+                if (cnt >= MaxInterviewsPerDay)
+                    throw new InvalidOperationException(
+                        $"HR interviewer already has {MaxInterviewsPerDay} interviews on {scheduledStart.Date:d}");
+
+                var startWithBuffer = scheduledStart - BreakGap;
+                var endWithBuffer = scheduledEnd + BreakGap;
+
+                if (!await _repo.IsInterviewerAvailableAsync(hrInterviewer, startWithBuffer, endWithBuffer))
+                    throw new InvalidOperationException(
+                        $"HR interviewer {hrInterviewer} is not available at {scheduledStart}.");
             }
 
-            var roundEntity = new CandidateInterviewRound
-            {
-                CandidateID = candidateId,
-                JobID = jobId,
-                SequenceNo = roundDto.SequenceNo,
-                RoundName = roundDto.RoundName,
-                RoundType = "Technical", 
-                IsPanelRound = roundDto.IsPanelRound,
-                RecruiterID = recruiterId,
-                ScheduledDate = roundDto.ScheduledDate.Value.Date,
-                StartTime = roundDto.StartTime.Value,
-                DurationMinutes = roundDto.DurationMinutes,
-                InterviewMode = roundDto.InterviewMode,
-                Status = "Scheduled",
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
-            };
+                var roundEntity = new CandidateInterviewRound
+                {
+                    CandidateID = candidateId,
+                    JobID = jobId,
+                    SequenceNo = roundDto.SequenceNo,
+                    RoundName = roundDto.RoundName,
+                    RoundType = roundDto.RoundType,
+                    IsPanelRound = roundDto.IsPanelRound,
+                    RecruiterID = recruiterId,
+                    ScheduledDate = roundDto.ScheduledDate.Value.Date,
+                    StartTime = roundDto.StartTime.Value,
+                    DurationMinutes = roundDto.DurationMinutes,
+                    InterviewMode = roundDto.InterviewMode,
+                    Status = "Scheduled",
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
 
             await _context.CandidateInterviewRounds.AddAsync(roundEntity);
-            if (saveChanges) await _context.SaveChangesAsync(); 
+            if (saveChanges) await _context.SaveChangesAsync();
 
-            if (roundDto.IsPanelRound)
+            /**/
+            if (isHrRound)
+            {
+                roundEntity.InterviewerID = roundDto.InterviewerIds!.First();
+                if (saveChanges) await _context.SaveChangesAsync();
+            }
+            else if (roundDto.IsPanelRound)
             {
                 var members = roundDto.InterviewerIds.Distinct()
                     .Select(id => new CandidatePanelMember { CandidateRoundID = roundEntity.CandidateRoundID, InterviewerID = id })
@@ -293,9 +351,13 @@ namespace Hyre.API.Services
                 if (saveChanges) await _context.SaveChangesAsync();
             }
 
-            var meetingLink = GenerateJitsiLink(jobId, candidateId, roundEntity.CandidateRoundID);
-            roundEntity.MeetingLink = meetingLink;
-            if (saveChanges) await _context.SaveChangesAsync();
+            string? meetingLink = null;
+            if (roundEntity.CandidateRoundID > 0)
+            {
+                meetingLink = GenerateJitsiLink(jobId, candidateId, roundEntity.CandidateRoundID, roundEntity.InterviewMode);
+                roundEntity.MeetingLink = meetingLink;
+                if (saveChanges) await _context.SaveChangesAsync();
+            }
 
             return roundEntity;
         }
@@ -316,8 +378,21 @@ namespace Hyre.API.Services
                 throw new InvalidOperationException("Cannot schedule more than 30 days in advance.");
         }
 
-        private string GenerateJitsiLink(int jobId, int candidateId, int roundId)
+        /*private string GenerateJitsiLink(int jobId, int candidateId, int roundId)
         {
+            var token = Guid.NewGuid().ToString("n").Substring(0, 8);
+            return $"https://meet.jit.si/hyre-job{jobId}-cand{candidateId}-r{roundId}-{token}";
+        }*/
+
+        private string? GenerateJitsiLink(int jobId, int candidateId, int roundId, string? interviewMode)
+        {
+            // Only generate meeting link for online interviews
+            if (string.IsNullOrEmpty(interviewMode) ||
+                !interviewMode.Equals("Online", StringComparison.OrdinalIgnoreCase))
+            {
+                return null;
+            }
+
             var token = Guid.NewGuid().ToString("n").Substring(0, 8);
             return $"https://meet.jit.si/hyre-job{jobId}-cand{candidateId}-r{roundId}-{token}";
         }

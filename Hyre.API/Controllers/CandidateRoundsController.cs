@@ -16,18 +16,32 @@ namespace Hyre.API.Controllers
         [HttpGet("{candidateId}/job/{jobId}")]
         public async Task<IActionResult> GetRounds(int candidateId, int jobId)
         {
-            var rounds = await _service.GetCandidateRoundsAsync(candidateId, jobId);
-            return Ok(rounds);
+            try
+            {
+                var rounds = await _service.GetCandidateRoundsAsync(candidateId, jobId);
+                return Ok(rounds);
+
+            }catch(Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         [HttpPost("update")]
         public async Task<IActionResult> Upsert([FromBody] CandidateRoundsUpdateDto dto)
         {
-            var recruiterId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(recruiterId)) return Unauthorized();
+            try
+            {
+                var recruiterId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (string.IsNullOrEmpty(recruiterId)) return Unauthorized();
 
-            var updated = await _service.UpsertCandidateRoundsAsync(dto, recruiterId);
-            return Ok(updated);
+                var updated = await _service.UpsertCandidateRoundsAsync(dto, recruiterId);
+                return Ok(updated);
+
+            }catch(Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
     }
 }
