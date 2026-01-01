@@ -62,5 +62,8 @@ namespace Hyre.API.Models
         public DateTime UpdatedAt { get; set; } = DateTime.Now;
 
         public ICollection<CandidatePanelMember> PanelMembers { get; set; } = new List<CandidatePanelMember>();
+
+        public ICollection<CandidateInterviewFeedback> Feedbacks { get; set; }
+
     }
 }

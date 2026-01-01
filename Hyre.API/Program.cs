@@ -8,6 +8,7 @@ using Hyre.API.Interfaces.CandidateReview;
 using Hyre.API.Interfaces.Candidates;
 using Hyre.API.Interfaces.InterviewerJob;
 using Hyre.API.Interfaces.InterviewTab;
+using Hyre.API.Interfaces.RecruiterFeedback;
 using Hyre.API.Interfaces.ReviewerJob;
 using Hyre.API.Interfaces.Role;
 using Hyre.API.Interfaces.Scheduling;
@@ -104,6 +105,9 @@ builder.Services.AddScoped<IInterviewService, InterviewService>();
 
 builder.Services.AddScoped<IInterviewFeedbackRepository, InterviewFeedbackRepository>();
 builder.Services.AddScoped<IInterviewFeedbackService, InterviewFeedbackService>();
+
+builder.Services.AddScoped<IRecruiterFeedbackRepository, RecruiterFeedbackRepository>();
+builder.Services.AddScoped<IRecruiterFeedbackService, RecruiterFeedbackService>();
 
 builder.Services.AddAuthorization();
 
