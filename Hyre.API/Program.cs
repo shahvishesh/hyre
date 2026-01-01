@@ -2,10 +2,12 @@ using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
 using Hyre.API.Data;
 using Hyre.API.Interfaces;
 using Hyre.API.Interfaces.Auth;
+using Hyre.API.Interfaces.CandidateFeedback;
 using Hyre.API.Interfaces.CandidateMatching;
 using Hyre.API.Interfaces.CandidateReview;
 using Hyre.API.Interfaces.Candidates;
 using Hyre.API.Interfaces.InterviewerJob;
+using Hyre.API.Interfaces.InterviewTab;
 using Hyre.API.Interfaces.ReviewerJob;
 using Hyre.API.Interfaces.Role;
 using Hyre.API.Interfaces.Scheduling;
@@ -96,6 +98,12 @@ builder.Services.AddScoped<ICandidateRoundService, CandidateRoundService>();
 
 builder.Services.AddScoped<IJobInterviewerRepository, JobInterviewerRepository>();
 builder.Services.AddScoped<IJobInterviewerService, JobInterviewerService>();
+
+builder.Services.AddScoped<IInterviewRepository, InterviewRepository>();
+builder.Services.AddScoped<IInterviewService, InterviewService>();
+
+builder.Services.AddScoped<IInterviewFeedbackRepository, InterviewFeedbackRepository>();
+builder.Services.AddScoped<IInterviewFeedbackService, InterviewFeedbackService>();
 
 builder.Services.AddAuthorization();
 

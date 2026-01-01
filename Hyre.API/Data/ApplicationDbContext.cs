@@ -53,5 +53,9 @@ namespace Hyre.API.Data
 
         public DbSet<CandidatePanelMember> CandidatePanelMembers { get; set; }
 
-    }
+        public DbSet<CandidateInterviewFeedback> CandidateInterviewFeedbacks { get; set; }
+
+        public DbSet<InterviewSkillRating> InterviewSkillRatings { get; set; }
+
+        }
 }
