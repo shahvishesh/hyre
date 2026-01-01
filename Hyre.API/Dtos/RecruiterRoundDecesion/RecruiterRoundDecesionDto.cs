@@ -27,4 +27,9 @@ namespace Hyre.API.Dtos.RecruiterRoundDecesion
         List<SkillAggregateDto> SkillAggregates,
         List<InterviewerFeedbackDto> IndividualFeedbacks
     );
+
+    public record RecruiterDecisionDto(
+        int CandidateRoundID,
+        string Decision // "Reject" | "MoveNext" | "Shortlist"
+    );
 }

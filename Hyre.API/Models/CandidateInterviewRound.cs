@@ -65,5 +65,12 @@ namespace Hyre.API.Models
 
         public ICollection<CandidateInterviewFeedback> Feedbacks { get; set; }
 
+        [MaxLength(20)]
+        public string? RecruiterDecision { get; set; }
+        // Approved | Rejected | Shortlisted
+
+        public DateTime? RecruiterDecisionAt { get; set; }
+
+        public string? RecruiterDecisionBy { get; set; }
     }
 }

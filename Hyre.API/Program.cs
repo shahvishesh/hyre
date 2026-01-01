@@ -109,6 +109,9 @@ builder.Services.AddScoped<IInterviewFeedbackService, InterviewFeedbackService>(
 builder.Services.AddScoped<IRecruiterFeedbackRepository, RecruiterFeedbackRepository>();
 builder.Services.AddScoped<IRecruiterFeedbackService, RecruiterFeedbackService>();
 
+builder.Services.AddScoped<IRecruiterDecisionRepository, RecruiterDecisionRepository>();
+builder.Services.AddScoped<IRecruiterDecisionService, RecruiterDecisionService>();
+
 builder.Services.AddAuthorization();
 
 
