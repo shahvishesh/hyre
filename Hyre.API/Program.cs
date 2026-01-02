@@ -32,6 +32,20 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowReact",
+        policy =>
+        {
+            policy
+                .WithOrigins("http://localhost:5173")
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowCredentials();
+        });
+});
+
+
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
 );
@@ -176,6 +190,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
     //app.MapScalarApiReference();
 }
+
+app.UseCors("AllowReact");
+
 
 //app.UseHttpsRedirection();
 app.UseAuthentication();
