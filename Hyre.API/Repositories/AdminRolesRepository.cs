@@ -2,6 +2,7 @@
 using Hyre.API.Interfaces.Role;
 using Hyre.API.Models;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace Hyre.API.Repositories
 {
@@ -66,5 +67,15 @@ namespace Hyre.API.Repositories
 
         public async Task<IList<string>> GetUserRolesAsync(ApplicationUser user)
             => await _userManager.GetRolesAsync(user);
+
+        public async Task<List<RoleDto>> GetAllRolesAsync()
+        {
+            var roles = await _roleManager.Roles
+                .OrderBy(r => r.Name)
+                .Select(r => new RoleDto(r.Id, r.Name))
+                .ToListAsync();
+
+            return roles;
+        }
     }
 }

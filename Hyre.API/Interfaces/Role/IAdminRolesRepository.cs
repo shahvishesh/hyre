@@ -11,5 +11,6 @@ namespace Hyre.API.Interfaces.Role
         Task<bool> AddUserToRoleAsync(ApplicationUser user, string roleName);
         Task<bool> RemoveUserFromRoleAsync(ApplicationUser user, string roleName);
         Task<IList<string>> GetUserRolesAsync(ApplicationUser user);
+        Task<List<RoleDto>> GetAllRolesAsync(); 
     }
 }

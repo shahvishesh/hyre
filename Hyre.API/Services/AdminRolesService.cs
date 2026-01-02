@@ -22,6 +22,12 @@ namespace Hyre.API.Services
         public async Task<UserRoleDto?> GetUserRolesAsync(string email)
             => await _adminRepository.GetUserByEmailAsync(email);
 
+        public async Task<RolesResponseDto> GetAllRolesAsync()
+        {
+            var roles = await _adminRepository.GetAllRolesAsync();
+            return new RolesResponseDto(roles, roles.Count);
+        }
+
         public async Task<string> AssignMultipleRolesAsync(AssignRolesDto dto)
         {
             var user = await _userManager.FindByEmailAsync(dto.UserEmail);

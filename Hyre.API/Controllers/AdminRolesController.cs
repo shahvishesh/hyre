@@ -1,6 +1,7 @@
 ﻿using Hyre.API.Dtos.Role;
 using Hyre.API.Models;
 using Hyre.API.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -33,6 +34,25 @@ namespace Hyre.API.Controllers
                 return NotFound("User not found");
 
             return Ok(user);
+        }
+
+        //[Authorize(Roles = "Admin,SuperAdmin")]
+        [HttpGet("roles")]
+        public async Task<IActionResult> GetAllRoles()
+        {
+            try
+            {
+                var roles = await _adminService.GetAllRolesAsync();
+                return Ok(new
+                {
+                    message = "Roles retrieved successfully.",
+                    data = roles
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "Failed to retrieve roles.", details = ex.Message });
+            }
         }
 
         [HttpPost("assign-roles")]
