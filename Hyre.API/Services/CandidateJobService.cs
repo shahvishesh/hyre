@@ -52,5 +52,48 @@ namespace Hyre.API.Services
             );
         }
 
+        public async Task<LinkedCandidatesResponseDto> GetLinkedCandidatesAsync(int jobId)
+        {
+            var job = await _context.Jobs.FirstOrDefaultAsync(j => j.JobID == jobId);
+            if (job == null)
+                throw new Exception("Job not found.");
+
+            var reviewedCandidateJobIds = await _context.CandidateReviews
+                .Where(r => r.CandidateJob.JobID == jobId)
+                .Select(r => r.CandidateJobID)
+                .ToListAsync();
+
+            var linkedCandidates = await _context.CandidateJobs
+                .Include(cj => cj.Candidate)
+                .ThenInclude(c => c.CandidateSkills)
+                .ThenInclude(cs => cs.Skill)
+                .Where(cj => cj.JobID == jobId && !reviewedCandidateJobIds.Contains(cj.CandidateJobID)) 
+                .OrderBy(cj => cj.CreatedAt)
+                .Select(cj => new LinkedCandidateDto(
+                    cj.CandidateJobID,
+                    cj.CandidateID,
+                    $"{cj.Candidate.FirstName} {cj.Candidate.LastName}".Trim(),
+                    cj.Candidate.Email,
+                    cj.Candidate.Phone,
+                    cj.Candidate.ExperienceYears,
+                    cj.Stage,
+                    cj.CreatedAt,
+                    cj.UpdatedAt,
+                    cj.Candidate.CandidateSkills.Select(cs => new CandidateSkillSummaryDto(
+                        cs.SkillID,
+                        cs.Skill.SkillName,
+                        cs.YearsOfExperience
+                    )).ToList()
+                ))
+                .ToListAsync();
+
+            return new LinkedCandidatesResponseDto(
+                jobId,
+                job.Title,
+                linkedCandidates,
+                linkedCandidates.Count
+            );
+        }
+
     }
 }

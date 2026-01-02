@@ -28,7 +28,7 @@ namespace Hyre.API.Dtos.RecruiterRoundDecesion
         List<InterviewerFeedbackDto> IndividualFeedbacks
     );
 
-    public record RecruiterDecisionDto(
+    public record RecruiterRoundDecisionDto(
         int CandidateRoundID,
         string Decision // "Reject" | "MoveNext" | "Shortlist"
     );

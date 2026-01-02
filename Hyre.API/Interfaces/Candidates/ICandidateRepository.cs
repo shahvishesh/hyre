@@ -9,6 +9,7 @@ namespace Hyre.API.Interfaces.Candidates
         Task<Candidate?> GetCandidateByIdAsync(int candidateId);
         Task UpdateResumePathAsync(int candidateId, string resumePath);
 
+        Task<List<Candidate>> GetAllCandidatesAsync();
         Task<bool> IsCandidateLinkedToJobAsync(int candidateId, int jobId);
  
     }

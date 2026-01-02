@@ -28,6 +28,7 @@ namespace Hyre.API.Repositories
                 .Include(j => j.SelectedCandidate)
                 .Include(j => j.JobSkills)
                 .ThenInclude(js => js.Skill)
+                .Include(j => j.InterviewRoundTemplates)
                 .FirstOrDefaultAsync(j => j.JobID == jobId);
         }
 
@@ -38,6 +39,7 @@ namespace Hyre.API.Repositories
                 .Include(j => j.SelectedCandidate)
                 .Include(j => j.JobSkills)
                 .ThenInclude(js => js.Skill)
+                .Include(j => j.InterviewRoundTemplates)
                 .ToListAsync();
         }
 

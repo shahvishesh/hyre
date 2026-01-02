@@ -34,8 +34,16 @@ namespace Hyre.API.Services
                 .Select(js => js.Skill.SkillName)
                 .ToList();
 
+            // Get candidate IDs that are already linked to this job
+            var linkedCandidateIds = await _context.CandidateJobs
+                .Where(cj => cj.JobID == jobId)
+                .Select(cj => cj.CandidateID)
+                .ToListAsync();
+
+            // Get candidates excluding those already linked to this job
             var candidates = await _context.Candidates
                 .Include(c => c.CandidateSkills).ThenInclude(cs => cs.Skill)
+                .Where(c => !linkedCandidateIds.Contains(c.CandidateID)) // Exclude linked candidates
                 .ToListAsync();
 
             var matches = new List<CandidateMatchDto>();

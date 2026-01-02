@@ -111,6 +111,49 @@ namespace Hyre.API.Services
             return map;
         }
 
+        public async Task<List<CandidateDto>> GetAllCandidatesAsync()
+        {
+            var candidates = await _repository.GetAllCandidatesAsync();
+
+            return candidates.Select(c => new CandidateDto(
+                c.CandidateID,
+                c.FirstName,
+                c.LastName,
+                c.Email,
+                c.Phone,
+                c.ExperienceYears,
+                c.ResumePath,
+                c.Status,
+                c.CandidateSkills.Select(cs => new CandidateSkillDto(
+                    cs.SkillID,
+                    cs.Skill.SkillName,
+                    cs.YearsOfExperience
+                )).ToList()
+            )).ToList();
+        }
+
+        // Add this method to the CandidateService class
+        public async Task<CandidateDto?> GetCandidateByIdAsync(int candidateId)
+        {
+            var candidate = await _repository.GetCandidateByIdAsync(candidateId);
+            if (candidate == null) return null;
+
+            var candidateSkills = candidate.CandidateSkills.Select(cs =>
+                new CandidateSkillDto(cs.SkillID, cs.Skill.SkillName, cs.YearsOfExperience)).ToList();
+
+            return new CandidateDto(
+                candidate.CandidateID,
+                candidate.FirstName,
+                candidate.LastName,
+                candidate.Email,
+                candidate.Phone,
+                candidate.ExperienceYears,
+                candidate.ResumePath,
+                candidate.Status,
+                candidateSkills
+            );
+        }
+
         private async Task<Dictionary<string, int>> ImportCandidatesAsync(IXLWorksheet sheet, string createdBy)
         {
             var map = new Dictionary<string, int>();
@@ -190,6 +233,24 @@ namespace Hyre.API.Services
         {
             var candidate = await _repository.GetCandidateByIdAsync(candidateId);
             return candidate != null;
+        }
+
+        public async Task<(byte[] fileBytes, string fileName, string contentType)?> GetCandidateResumeAsync(int candidateId)
+        {
+            var candidate = await _repository.GetCandidateByIdAsync(candidateId);
+            if (candidate == null || string.IsNullOrEmpty(candidate.ResumePath))
+                return null;
+
+            var resumeFullPath = Path.Combine(Directory.GetCurrentDirectory(), "PrivateFiles", candidate.ResumePath);
+
+            if (!File.Exists(resumeFullPath))
+                return null;
+
+            var fileBytes = await File.ReadAllBytesAsync(resumeFullPath);
+            var fileName = Path.GetFileName(resumeFullPath);
+            var contentType = "application/pdf"; 
+
+            return (fileBytes, fileName, contentType);
         }
     }
 

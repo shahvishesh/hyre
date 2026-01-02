@@ -26,6 +26,16 @@ namespace Hyre.API.Repositories
             await _context.SaveChangesAsync();
         }
 
+        public async Task<List<Candidate>> GetAllCandidatesAsync()
+        {
+            return await _context.Candidates
+                .Include(c => c.CandidateSkills)
+                .ThenInclude(cs => cs.Skill)
+                .OrderBy(c => c.FirstName)
+                .ThenBy(c => c.LastName)
+                .ToListAsync();
+        }
+
         public async Task<Candidate?> GetCandidateByIdAsync(int candidateId)
         {
             return await _context.Candidates

@@ -64,5 +64,71 @@ namespace Hyre.API.Controllers
                 message = $"Candidates imported successfully."
             });
         }
+
+        [Authorize(Roles = "Recruiter,Admin,HR,Interviewer,Reviewer")]
+        [HttpGet]
+        public async Task<IActionResult> GetAllCandidates()
+        {
+            try
+            {
+                var candidates = await _candidateService.GetAllCandidatesAsync();
+                return Ok(new
+                {
+                    message = "Candidates retrieved successfully.",
+                    candidates = candidates,
+                    count = candidates.Count
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "Unexpected server error.", details = ex.Message });
+            }
+        }
+
+        [Authorize(Roles = "Recruiter,Admin,HR,Interviewer,Reviewer")]
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetCandidateById(int id)
+        {
+            try
+            {
+                var candidate = await _candidateService.GetCandidateByIdAsync(id);
+                if (candidate == null)
+                {
+                    return NotFound(new { message = $"Candidate with ID {id} not found." });
+                }
+
+                return Ok(new
+                {
+                    message = "Candidate retrieved successfully.",
+                    candidate = candidate
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "Unexpected server error.", details = ex.Message });
+            }
+        }
+
+        //[Authorize(Roles = "Recruiter,Admin,HR,Interviewer,Reviewer")]
+        [HttpGet("{id}/resume")]
+        public async Task<IActionResult> GetCandidateResume(int id)
+        {
+            try
+            {
+                var resumeData = await _candidateService.GetCandidateResumeAsync(id);
+                if (resumeData == null)
+                {
+                    return NotFound(new { message = $"Resume not found for candidate with ID {id}." });
+                }
+
+                var (fileBytes, fileName, contentType) = resumeData.Value;
+
+                return File(fileBytes, contentType);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "Unexpected server error.", details = ex.Message });
+            }
+        }
     }
 }

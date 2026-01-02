@@ -14,7 +14,7 @@ namespace Hyre.API.Services
         }
 
         public async Task ApplyDecisionAsync(
-            RecruiterDecisionDto dto, string recruiterId)
+            RecruiterRoundDecisionDto dto, string recruiterId)
         {
             var round = await _repo.GetRoundAsync(dto.CandidateRoundID)
                 ?? throw new Exception("Interview round not found.");
@@ -63,7 +63,14 @@ namespace Hyre.API.Services
             {
                 r.Status = "Cancelled";
             }
+
+            var candidateJob = await _repo.GetCandidateJobAsync(round.CandidateID, round.JobID);
+            if (candidateJob != null)
+            {
+                candidateJob.Stage = "Rejected";
+            }
         }
+
 
         private async Task MoveToNextRound(CandidateInterviewRound round)
         {
@@ -76,18 +83,30 @@ namespace Hyre.API.Services
 
             if (nextRound.Status == "Blocked")
                 nextRound.Status = "Scheduled";
+
+            var candidateJob = await _repo.GetCandidateJobAsync(round.CandidateID, round.JobID);
+            if (candidateJob != null)
+            {
+                candidateJob.Stage = "Interview";
+            }
         }
 
-        private Task ShortlistCandidate(CandidateInterviewRound round)
+
+        private async Task ShortlistCandidate(CandidateInterviewRound round)
         {
-            var nextRound = _repo.GetNextRoundAsync(
-                round.CandidateID, round.JobID, round.SequenceNo).Result;
+            var nextRound = await _repo.GetNextRoundAsync(
+                round.CandidateID, round.JobID, round.SequenceNo);
 
             if (nextRound != null)
                 throw new InvalidOperationException(
                     "Candidate has more rounds. Cannot shortlist yet.");
 
-            return Task.CompletedTask;
+            var candidateJob = await _repo.GetCandidateJobAsync(round.CandidateID, round.JobID);
+            if (candidateJob != null)
+            {
+                candidateJob.Stage = "Shortlisted"; 
+            }
         }
+
     }
 }

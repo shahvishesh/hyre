@@ -42,6 +42,15 @@ namespace Hyre.API.Repositories
                 .ToListAsync();
         }
 
+        public async Task<CandidateJob?> GetCandidateJobAsync(int candidateId, int jobId)
+        {
+            return await _context.CandidateJobs
+                .FirstOrDefaultAsync(cj =>
+                    cj.CandidateID == candidateId &&
+                    cj.JobID == jobId);
+        }
+
+
         public async Task SaveAsync()
         {
             await _context.SaveChangesAsync();

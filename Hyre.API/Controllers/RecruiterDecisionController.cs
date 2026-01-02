@@ -25,7 +25,7 @@ namespace Hyre.API.Controllers
         [HttpPost]
         [Authorize(Roles = "Recruiter")]
         public async Task<IActionResult> Decide(
-            [FromBody] RecruiterDecisionDto dto)
+            [FromBody] RecruiterRoundDecisionDto dto)
         {
             await _service.ApplyDecisionAsync(dto, GetUserId());
             return Ok(new { message = "Decision applied successfully." });

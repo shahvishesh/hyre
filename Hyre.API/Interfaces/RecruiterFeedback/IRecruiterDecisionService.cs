@@ -5,6 +5,6 @@ namespace Hyre.API.Interfaces.RecruiterFeedback
     public interface IRecruiterDecisionService
     {
         Task ApplyDecisionAsync(
-            RecruiterDecisionDto dto, string recruiterId);
+            RecruiterRoundDecisionDto dto, string recruiterId);
     }
 }
