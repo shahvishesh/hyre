@@ -6,5 +6,6 @@ namespace Hyre.API.Interfaces.InterviewTab
     public interface IInterviewService
     {
         Task<List<InterviewRoundDto>> GetRoundsByTabAsync(string interviewerId, InterviewTabs tab);
+        Task<List<LiveInterviewDetailDto>> GetLiveInterviewsWithDetailsAsync(string interviewerId);
     }
 }

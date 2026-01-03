@@ -18,8 +18,13 @@ namespace Hyre.API.Repositories
         {
             return await _context.CandidateInterviewRounds
                 .Include(r => r.Candidate)
+                    .ThenInclude(c => c.CandidateSkills)
+                        .ThenInclude(cs => cs.Skill)
                 .Include(r => r.Job)
+                    .ThenInclude(j => j.JobSkills)
+                        .ThenInclude(js => js.Skill)
                 .Include(r => r.PanelMembers)
+                    .ThenInclude(pm => pm.Interviewer)
                 .Where(r =>
                     r.InterviewerID == interviewerId ||
                     r.PanelMembers.Any(pm => pm.InterviewerID == interviewerId))

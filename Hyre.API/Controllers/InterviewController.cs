@@ -26,6 +26,12 @@ namespace Hyre.API.Controllers
             return Ok(await _service.GetRoundsByTabAsync(GetUserId(), InterviewTabs.Live));
         }
 
+        [HttpGet("live/details")]
+        public async Task<IActionResult> GetLiveWithDetails()
+        {
+            return Ok(await _service.GetLiveInterviewsWithDetailsAsync(GetUserId()));
+        }
+
         [HttpGet("today")]
         public async Task<IActionResult> GetToday()
         {
