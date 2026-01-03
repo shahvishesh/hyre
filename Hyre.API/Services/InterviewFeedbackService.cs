@@ -138,5 +138,32 @@ namespace Hyre.API.Services
                 .ToList();
         }
 
+        public async Task<List<InterviewerJobDto>> GetInterviewerJobsAsync(string interviewerId)
+        {
+            var jobs = await _repo.GetJobsForInterviewerAsync(interviewerId);
+            
+            var result = new List<InterviewerJobDto>();
+
+            foreach (var job in jobs)
+            {
+                
+
+                result.Add(new InterviewerJobDto(
+                    job.JobID,
+                    job.Title,
+                    job.Description,
+                    job.CompanyName,
+                    job.Location,
+                    job.JobType,
+                    job.WorkplaceType,
+                    job.Status,
+                    job.MinExperience,
+                    job.MaxExperience,
+                    job.CreatedAt
+                ));
+            }
+
+            return result;
+        }
     }
 }

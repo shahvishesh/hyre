@@ -49,11 +49,17 @@ namespace Hyre.API.Controllers
             return Ok(result);
         }
 
-        // Completed feedback
         [HttpGet("completed")]
         public async Task<IActionResult> GetCompleted()
         {
             var result = await _service.GetCompletedFeedbackAsync(GetUserId());
+            return Ok(result);
+        }
+
+        [HttpGet("jobs")]
+        public async Task<IActionResult> GetInterviewerJobs()
+        {
+            var result = await _service.GetInterviewerJobsAsync(GetUserId());
             return Ok(result);
         }
     }

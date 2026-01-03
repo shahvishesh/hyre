@@ -68,6 +68,18 @@ namespace Hyre.API.Repositories
                 .ToListAsync();
         }
 
+        public async Task<List<Job>> GetJobsForInterviewerAsync(string interviewerId)
+        {
+            return await _context.CandidateInterviewRounds
+                .Include(r => r.Job)
+                .Where(r => r.InterviewerID == interviewerId ||
+                           r.PanelMembers.Any(pm => pm.InterviewerID == interviewerId))
+                .Select(r => r.Job)
+                .Distinct()
+                .OrderByDescending(j => j.CreatedAt)
+                .ToListAsync();
+        }
+
         public async Task SaveAsync()
         {
             await _context.SaveChangesAsync();

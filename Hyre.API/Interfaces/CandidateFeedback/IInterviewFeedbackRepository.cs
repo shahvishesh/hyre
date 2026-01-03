@@ -11,6 +11,7 @@ namespace Hyre.API.Interfaces.CandidateFeedback
 
         Task<List<CandidateInterviewRound>> GetCompletedRoundsForInterviewerAsync(string interviewerId);
         Task<List<CandidateInterviewFeedback>> GetFeedbacksByInterviewerAsync(string interviewerId);
+        Task<List<Job>> GetJobsForInterviewerAsync(string interviewerId);
         Task SaveAsync();
     }
 }
