@@ -275,5 +275,66 @@ namespace Hyre.API.Services
 
             return completed;
         }
+
+        public async Task<RoundDetailDto> GetRoundDetailAsync(int candidateRoundId, string interviewerId)
+        {
+            var round = await _repo.GetRoundByIdAsync(candidateRoundId)
+                ?? throw new ArgumentException("Round not found.", nameof(candidateRoundId));
+
+            // Verify interviewer has access to this round
+            if (!await _repo.HasAccessToRoundAsync(candidateRoundId, interviewerId))
+                throw new UnauthorizedAccessException("Not authorized to view this round.");
+
+            // Build panel members list (only if it's a panel round)
+            List<PanelMemberDetailDto>? panelMembers = null;
+            if (round.IsPanelRound && round.PanelMembers != null && round.PanelMembers.Any())
+            {
+                panelMembers = round.PanelMembers
+                    .Where(pm => pm.Interviewer != null)
+                    .Select(pm => new PanelMemberDetailDto(
+                        pm.InterviewerID,
+                        pm.Interviewer.FirstName,
+                        pm.Interviewer.LastName,
+                        pm.Interviewer.Email
+                    ))
+                    .ToList();
+            }
+
+            // Build interviewer details (only for non-panel rounds)
+            InterviewerDetailDto? interviewer = null;
+            if (!round.IsPanelRound && round.Interviewer != null)
+            {
+                interviewer = new InterviewerDetailDto(
+                    round.InterviewerID!,
+                    round.Interviewer.FirstName,
+                    round.Interviewer.LastName,
+                    round.Interviewer.Email
+                );
+            }
+
+            return new RoundDetailDto(
+                round.CandidateRoundID,
+                round.CandidateID,
+                $"{round.Candidate.FirstName} {round.Candidate.LastName}",
+                round.JobID,
+                round.Job.Title,
+                round.SequenceNo,
+                round.RoundName,
+                round.RoundType,
+                round.IsPanelRound,
+                round.ScheduledDate,
+                round.StartTime,
+                round.DurationMinutes,
+                round.InterviewMode,
+                round.Status,
+                round.MeetingLink,
+                round.CreatedAt,
+                round.UpdatedAt,
+                round.RecruiterDecision,
+                round.RecruiterDecisionAt,
+                panelMembers,
+                interviewer
+            );
+        }
     }
 }

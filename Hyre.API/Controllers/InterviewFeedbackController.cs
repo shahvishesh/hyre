@@ -83,5 +83,12 @@ namespace Hyre.API.Controllers
             var result = await _service.GetCompletedFeedbackForCandidateJobAsync(candidateId, jobId, GetUserId());
             return Ok(result);
         }
+
+        [HttpGet("round-detail/{candidateRoundId}")]
+        public async Task<IActionResult> GetRoundDetail(int candidateRoundId)
+        {
+            var result = await _service.GetRoundDetailAsync(candidateRoundId, GetUserId());
+            return Ok(result);
+        }
     }
 }
