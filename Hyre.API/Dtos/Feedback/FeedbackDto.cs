@@ -79,4 +79,10 @@
         string LastName,
         string? Email
     );
+
+    public record SimpleFeedbackDto(
+        int CandidateRoundID,
+        string? OverallComment,
+        List<SkillRatingDto> SkillRatings
+    );
 }

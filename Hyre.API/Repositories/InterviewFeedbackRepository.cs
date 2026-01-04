@@ -139,6 +139,13 @@ namespace Hyre.API.Repositories
                 .FirstOrDefaultAsync(r => r.CandidateRoundID == candidateRoundId);
         }
 
+        public async Task<CandidateInterviewFeedback?> GetFeedbackByRoundAndInterviewerAsync(int candidateRoundId, string interviewerId)
+        {
+            return await _context.CandidateInterviewFeedbacks
+                .Include(f => f.SkillRatings)
+                .FirstOrDefaultAsync(f => f.CandidateRoundID == candidateRoundId && f.InterviewerID == interviewerId);
+        }
+
         public async Task SaveAsync()
         {
             await _context.SaveChangesAsync();

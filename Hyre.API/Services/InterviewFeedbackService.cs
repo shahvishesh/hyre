@@ -336,5 +336,23 @@ namespace Hyre.API.Services
                 interviewer
             );
         }
+
+        public async Task<SimpleFeedbackDto> GetMyFeedbackForRoundAsync(int candidateRoundId, string interviewerId)
+        {
+            if (!await _repo.HasAccessToRoundAsync(candidateRoundId, interviewerId))
+                throw new UnauthorizedAccessException("Not authorized to view this round.");
+
+            var feedback = await _repo.GetFeedbackByRoundAndInterviewerAsync(candidateRoundId, interviewerId)
+                ?? throw new InvalidOperationException("Feedback not found for this round and interviewer combination.");
+
+            return new SimpleFeedbackDto(
+                feedback.CandidateRoundID,
+                feedback.OverallComment,
+                feedback.SkillRatings.Select(sr => new SkillRatingDto(
+                    sr.SkillID,
+                    sr.Rating
+                )).ToList()
+            );
+        }
     }
 }
