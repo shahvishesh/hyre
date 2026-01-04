@@ -197,5 +197,47 @@ namespace Hyre.API.Services
                     .ToList() ?? new List<CandidateSkillDto>()
             )).ToList();
         }
+
+        public async Task<List<PendingFeedbackDto>> GetPendingFeedbackForCandidateJobAsync(int candidateId, int jobId, string interviewerId)
+        {
+            // Verify interviewer has access to this candidate for this specific job
+            var hasAccess = await _context.CandidateInterviewRounds
+                .AnyAsync(r => r.CandidateID == candidateId &&
+                              r.JobID == jobId &&
+                              (r.InterviewerID == interviewerId ||
+                               r.PanelMembers.Any(pm => pm.InterviewerID == interviewerId)));
+
+            if (!hasAccess)
+                throw new UnauthorizedAccessException("Not authorized to view feedback for this candidate and job combination.");
+
+            var completedRounds = await _repo.GetCompletedRoundsForCandidateJobAsync(candidateId, jobId, interviewerId);
+            var feedbacks = await _repo.GetFeedbacksByInterviewerAsync(interviewerId);
+
+            var feedbackRoundIds = feedbacks
+                .Select(f => f.CandidateRoundID)
+                .ToHashSet();
+
+            var pending = completedRounds
+                .Where(r => !feedbackRoundIds.Contains(r.CandidateRoundID))
+                .Select(r =>
+                {
+                    var interviewDate = r.ScheduledDate!.Value.Date + r.StartTime!.Value;
+
+                    return new PendingFeedbackDto(
+                        r.CandidateRoundID,
+                        r.CandidateID,
+                        $"{r.Candidate.FirstName} {r.Candidate.LastName}",
+                        r.JobID,
+                        r.Job.Title,
+                        r.RoundName,
+                        r.RoundType,
+                        interviewDate
+                    );
+                })
+                .OrderBy(p => p.InterviewDate)
+                .ToList();
+
+            return pending;
+        }
     }
 }
