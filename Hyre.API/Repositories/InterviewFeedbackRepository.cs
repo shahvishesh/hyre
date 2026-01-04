@@ -80,6 +80,22 @@ namespace Hyre.API.Repositories
                 .ToListAsync();
         }
 
+        public async Task<List<Candidate>> GetInterviewedCandidatesForJobAsync(int jobId, string interviewerId)
+        {
+            return await _context.CandidateInterviewRounds
+                .Include(r => r.Candidate)
+                    .ThenInclude(c => c.CandidateSkills)
+                        .ThenInclude(cs => cs.Skill)
+                .Where(r => r.JobID == jobId &&
+                           (r.InterviewerID == interviewerId ||
+                            r.PanelMembers.Any(pm => pm.InterviewerID == interviewerId)))
+                .Select(r => r.Candidate)
+                .Distinct()
+                .OrderBy(c => c.FirstName)
+                .ThenBy(c => c.LastName)
+                .ToListAsync();
+        }
+
         public async Task SaveAsync()
         {
             await _context.SaveChangesAsync();

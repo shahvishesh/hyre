@@ -62,5 +62,12 @@ namespace Hyre.API.Controllers
             var result = await _service.GetInterviewerJobsAsync(GetUserId());
             return Ok(result);
         }
+
+        [HttpGet("job/{jobId}/candidates")]
+        public async Task<IActionResult> GetInterviewedCandidatesForJob(int jobId)
+        {
+            var result = await _service.GetInterviewedCandidatesForJobAsync(jobId, GetUserId());
+            return Ok(result);
+        }
     }
 }

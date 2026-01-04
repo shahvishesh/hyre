@@ -165,5 +165,37 @@ namespace Hyre.API.Services
 
             return result;
         }
+
+        public async Task<List<InterviewedCandidateDto>> GetInterviewedCandidatesForJobAsync(int jobId, string interviewerId)
+        {
+            var hasAccess = await _context.CandidateInterviewRounds
+                .AnyAsync(r => r.JobID == jobId &&
+                              (r.InterviewerID == interviewerId ||
+                               r.PanelMembers.Any(pm => pm.InterviewerID == interviewerId)));
+
+            if (!hasAccess)
+                throw new UnauthorizedAccessException("Not authorized to view candidates for this job.");
+
+            var candidates = await _repo.GetInterviewedCandidatesForJobAsync(jobId, interviewerId);
+
+            return candidates.Select(c => new InterviewedCandidateDto(
+                c.CandidateID,
+                c.FirstName,
+                c.LastName,
+                c.Email,
+                c.Phone,
+                c.ExperienceYears,
+                c.ResumePath,
+                c.Status,
+                c.CandidateSkills?
+                    .Where(cs => cs.Skill != null)
+                    .Select(cs => new CandidateSkillDto(
+                        cs.SkillID,
+                        cs.Skill.SkillName,
+                        cs.YearsOfExperience
+                    ))
+                    .ToList() ?? new List<CandidateSkillDto>()
+            )).ToList();
+        }
     }
 }
