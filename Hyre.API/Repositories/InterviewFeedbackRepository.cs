@@ -111,6 +111,23 @@ namespace Hyre.API.Repositories
                 .ToListAsync();
         }
 
+        public async Task<List<CandidateInterviewRound>> GetCompletedRoundsWithFeedbackForCandidateJobAsync(int candidateId, int jobId, string interviewerId)
+        {
+            return await _context.CandidateInterviewRounds
+                .Include(r => r.Candidate)
+                .Include(r => r.Job)
+                .Include(r => r.PanelMembers)
+                .Include(r => r.Feedbacks)
+                .Where(r =>
+                    r.CandidateID == candidateId &&
+                    r.JobID == jobId &&
+                    r.Status == "Completed" &&
+                    r.Feedbacks.Any(f => f.InterviewerID == interviewerId) &&
+                    (r.InterviewerID == interviewerId ||
+                     r.PanelMembers.Any(pm => pm.InterviewerID == interviewerId)))
+                .ToListAsync();
+        }
+
         public async Task SaveAsync()
         {
             await _context.SaveChangesAsync();

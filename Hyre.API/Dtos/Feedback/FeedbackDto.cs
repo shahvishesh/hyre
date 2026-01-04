@@ -30,4 +30,15 @@
         string RoundType,
         DateTime InterviewDate
     );
+
+    public record CompletedFeedbackDto(
+        int CandidateRoundID,
+        int CandidateID,
+        string CandidateName,
+        int JobID,
+        string JobTitle,
+        string RoundName,
+        string RoundType,
+        DateTime InterviewDate
+    );
 }

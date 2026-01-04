@@ -239,5 +239,41 @@ namespace Hyre.API.Services
 
             return pending;
         }
+
+        public async Task<List<CompletedFeedbackDto>> GetCompletedFeedbackForCandidateJobAsync(int candidateId, int jobId, string interviewerId)
+        {
+            // Verify interviewer has access to this candidate for this specific job
+            var hasAccess = await _context.CandidateInterviewRounds
+                .AnyAsync(r => r.CandidateID == candidateId &&
+                              r.JobID == jobId &&
+                              (r.InterviewerID == interviewerId ||
+                               r.PanelMembers.Any(pm => pm.InterviewerID == interviewerId)));
+
+            if (!hasAccess)
+                throw new UnauthorizedAccessException("Not authorized to view feedback for this candidate and job combination.");
+
+            var completedRoundsWithFeedback = await _repo.GetCompletedRoundsWithFeedbackForCandidateJobAsync(candidateId, jobId, interviewerId);
+
+            var completed = completedRoundsWithFeedback
+                .Select(r =>
+                {
+                    var interviewDate = r.ScheduledDate!.Value.Date + r.StartTime!.Value;
+
+                    return new CompletedFeedbackDto(
+                        r.CandidateRoundID,
+                        r.CandidateID,
+                        $"{r.Candidate.FirstName} {r.Candidate.LastName}",
+                        r.JobID,
+                        r.Job.Title,
+                        r.RoundName,
+                        r.RoundType,
+                        interviewDate
+                    );
+                })
+                .OrderBy(c => c.InterviewDate)
+                .ToList();
+
+            return completed;
+        }
     }
 }
