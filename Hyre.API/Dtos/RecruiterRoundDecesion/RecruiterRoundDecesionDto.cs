@@ -2,6 +2,13 @@
 
 namespace Hyre.API.Dtos.RecruiterRoundDecesion
 {
+    public enum RecruiterDecisionState
+    {
+        Pending,    // RecruiterDecision == null
+        Decided,    // RecruiterDecision != null
+        All         // All rounds regardless of decision state
+    }
+
     public record SkillAggregateDto(
         int SkillID,
         string SkillName,
@@ -31,5 +38,17 @@ namespace Hyre.API.Dtos.RecruiterRoundDecesion
     public record RecruiterRoundDecisionDto(
         int CandidateRoundID,
         string Decision // "Reject" | "MoveNext" | "Shortlist"
+    );
+
+    public record PendingRecruiterDecisionDto(
+        int CandidateRoundID,
+        int CandidateID,
+        string CandidateName,
+        int JobID,
+        string JobTitle,
+        string RoundName,
+        string RoundType,
+        DateTime InterviewDate,
+        string Status
     );
 }

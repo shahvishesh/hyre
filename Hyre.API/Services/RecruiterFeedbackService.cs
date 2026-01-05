@@ -58,5 +58,24 @@ namespace Hyre.API.Services
                 individual
             );
         }
+
+       
+
+        public async Task<IEnumerable<PendingRecruiterDecisionDto>> GetRoundsByDecisionStateAsync(int candidateId, int jobId, RecruiterDecisionState decisionState)
+        {
+            var rounds = await _repo.GetRoundsByDecisionStateAsync(candidateId, jobId, decisionState);
+
+            return rounds.Select(r => new PendingRecruiterDecisionDto(
+                r.CandidateRoundID,
+                r.CandidateID,
+                $"{r.Candidate.FirstName} {r.Candidate.LastName}",
+                r.JobID,
+                r.Job.Title,
+                r.RoundName,
+                r.RoundType ?? string.Empty,
+                r.ScheduledDate ?? DateTime.MinValue,
+                r.Status
+            ));
+        }
     }
 }
