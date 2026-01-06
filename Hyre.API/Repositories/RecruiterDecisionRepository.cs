@@ -31,6 +31,22 @@ namespace Hyre.API.Repositories
                 .FirstOrDefaultAsync();
         }
 
+        public async Task<CandidateInterviewRound?> GetNextRoundDetailAsync(
+            int candidateId, int jobId, int currentSequenceNo)
+        {
+            return await _context.CandidateInterviewRounds
+                .Include(r => r.Candidate)
+                .Include(r => r.Job)
+                .Include(r => r.Interviewer)
+                .Include(r => r.PanelMembers)
+                    .ThenInclude(pm => pm.Interviewer)
+                .Where(r =>
+                    r.CandidateID == candidateId &&
+                    r.JobID == jobId &&
+                    r.SequenceNo == currentSequenceNo + 1)
+                .FirstOrDefaultAsync();
+        }
+
         public async Task<List<CandidateInterviewRound>> GetFutureRoundsAsync(
             int candidateId, int jobId, int fromSequenceNo)
         {

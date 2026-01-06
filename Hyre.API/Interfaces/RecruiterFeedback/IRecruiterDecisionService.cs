@@ -1,4 +1,5 @@
-﻿using Hyre.API.Dtos.RecruiterRoundDecesion;
+﻿using Hyre.API.Dtos.Feedback;
+using Hyre.API.Dtos.RecruiterRoundDecesion;
 
 namespace Hyre.API.Interfaces.RecruiterFeedback
 {
@@ -6,5 +7,6 @@ namespace Hyre.API.Interfaces.RecruiterFeedback
     {
         Task ApplyDecisionAsync(
             RecruiterRoundDecisionDto dto, string recruiterId);
+        Task<RoundDetailDto?> GetNextRoundDetailAsync(int candidateId, int jobId, int currentSequenceNo);
     }
 }

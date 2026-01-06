@@ -30,5 +30,19 @@ namespace Hyre.API.Controllers
             await _service.ApplyDecisionAsync(dto, GetUserId());
             return Ok(new { message = "Decision applied successfully." });
         }
+
+        [HttpGet("next-round")]
+        public async Task<IActionResult> GetNextRoundDetail(
+            [FromQuery] int candidateId, 
+            [FromQuery] int jobId, 
+            [FromQuery] int currentSequenceNo)
+        {
+            var result = await _service.GetNextRoundDetailAsync(candidateId, jobId, currentSequenceNo);
+            
+            if (result == null)
+                return NotFound(new { message = "No next round found." });
+                
+            return Ok(result);
+        }
     }
 }

@@ -1,5 +1,6 @@
-﻿using Hyre.API.Interfaces.RecruiterFeedback;
+﻿using Hyre.API.Dtos.Feedback;
 using Hyre.API.Dtos.RecruiterRoundDecesion;
+using Hyre.API.Interfaces.RecruiterFeedback;
 using Hyre.API.Models;
 
 namespace Hyre.API.Services
@@ -106,6 +107,65 @@ namespace Hyre.API.Services
             {
                 candidateJob.Stage = "Shortlisted"; 
             }
+        }
+
+        public async Task<RoundDetailDto?> GetNextRoundDetailAsync(int candidateId, int jobId, int currentSequenceNo)
+        {
+            var nextRound = await _repo.GetNextRoundDetailAsync(candidateId, jobId, currentSequenceNo);
+
+            if (nextRound == null)
+                return null;
+
+            // Build panel members list (only if it's a panel round)
+            List<PanelMemberDetailDto>? panelMembers = null;
+            if (nextRound.IsPanelRound && nextRound.PanelMembers != null && nextRound.PanelMembers.Any())
+            {
+                panelMembers = nextRound.PanelMembers
+                    .Where(pm => pm.Interviewer != null)
+                    .Select(pm => new PanelMemberDetailDto(
+                        pm.InterviewerID,
+                        pm.Interviewer.FirstName,
+                        pm.Interviewer.LastName,
+                        pm.Interviewer.Email
+                    ))
+                    .ToList();
+            }
+
+            // Build interviewer details (only for non-panel rounds)
+            InterviewerDetailDto? interviewer = null;
+            if (!nextRound.IsPanelRound && nextRound.Interviewer != null)
+            {
+                interviewer = new InterviewerDetailDto(
+                    nextRound.InterviewerID!,
+                    nextRound.Interviewer.FirstName,
+                    nextRound.Interviewer.LastName,
+                    nextRound.Interviewer.Email
+                );
+            }
+
+            return new RoundDetailDto(
+                nextRound.CandidateRoundID,
+                nextRound.CandidateID,
+                $"{nextRound.Candidate.FirstName} {nextRound.Candidate.LastName}",
+                nextRound.JobID,
+                nextRound.Job.Title,
+                nextRound.SequenceNo,
+                nextRound.RoundName,
+                nextRound.RoundType ?? string.Empty,
+                nextRound.IsPanelRound,
+                nextRound.ScheduledDate,
+                nextRound.StartTime,
+                nextRound.DurationMinutes,
+                nextRound.InterviewMode,
+                nextRound.Status,
+                nextRound.MeetingLink,
+                nextRound.CreatedAt,
+                nextRound.UpdatedAt,
+                nextRound.RecruiterDecision,
+                nextRound.RecruiterDecisionAt,
+                panelMembers,
+                interviewer
+            );
         }
 
     }
