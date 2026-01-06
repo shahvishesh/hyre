@@ -168,5 +168,27 @@ namespace Hyre.API.Services
             );
         }
 
+        public async Task<RecruiterDecisionResultDto?> GetRecruiterDecisionAsync(int roundId)
+        {
+            var round = await _repo.GetRoundWithDecisionDetailsAsync(roundId);
+
+            if (round == null)
+                return null;
+
+            return new RecruiterDecisionResultDto(
+                round.CandidateRoundID,
+                round.CandidateID,
+                $"{round.Candidate.FirstName} {round.Candidate.LastName}",
+                round.JobID,
+                round.Job.Title,
+                round.RoundName,
+                round.RoundType ?? string.Empty,
+                round.RecruiterDecision,
+                round.RecruiterDecisionAt,
+                round.RecruiterDecisionBy,
+                $"{round.Recruiter.FirstName} {round.Recruiter.LastName}"
+            );
+        }
+
     }
 }

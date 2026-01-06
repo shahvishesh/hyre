@@ -44,5 +44,16 @@ namespace Hyre.API.Controllers
                 
             return Ok(result);
         }
+
+        [HttpGet("{roundId}/recruiter-decision")]
+        public async Task<IActionResult> GetRecruiterDecision(int roundId)
+        {
+            var result = await _service.GetRecruiterDecisionAsync(roundId);
+            
+            if (result == null)
+                return NotFound(new { message = "Round not found." });
+                
+            return Ok(result);
+        }
     }
 }

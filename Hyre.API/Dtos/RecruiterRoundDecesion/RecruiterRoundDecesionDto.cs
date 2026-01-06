@@ -51,4 +51,18 @@ namespace Hyre.API.Dtos.RecruiterRoundDecesion
         DateTime InterviewDate,
         string Status
     );
+
+    public record RecruiterDecisionResultDto(
+        int CandidateRoundID,
+        int CandidateID,
+        string CandidateName,
+        int JobID,
+        string JobTitle,
+        string RoundName,
+        string RoundType,
+        string? RecruiterDecision,
+        DateTime? RecruiterDecisionAt,
+        string? RecruiterDecisionBy,
+        string RecruiterName
+    );
 }

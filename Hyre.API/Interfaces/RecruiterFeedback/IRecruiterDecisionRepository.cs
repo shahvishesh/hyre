@@ -9,6 +9,7 @@ namespace Hyre.API.Interfaces.RecruiterFeedback
             int candidateId, int jobId, int currentSequenceNo);
         Task<CandidateInterviewRound?> GetNextRoundDetailAsync(
             int candidateId, int jobId, int currentSequenceNo);
+        Task<CandidateInterviewRound?> GetRoundWithDecisionDetailsAsync(int roundId);
 
         Task<List<CandidateInterviewRound>> GetFutureRoundsAsync(
             int candidateId, int jobId, int fromSequenceNo);

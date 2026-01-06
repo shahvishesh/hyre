@@ -8,5 +8,6 @@ namespace Hyre.API.Interfaces.RecruiterFeedback
         Task ApplyDecisionAsync(
             RecruiterRoundDecisionDto dto, string recruiterId);
         Task<RoundDetailDto?> GetNextRoundDetailAsync(int candidateId, int jobId, int currentSequenceNo);
+        Task<RecruiterDecisionResultDto?> GetRecruiterDecisionAsync(int roundId);
     }
 }
