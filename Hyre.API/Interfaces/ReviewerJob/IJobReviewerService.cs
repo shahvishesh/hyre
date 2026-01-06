@@ -8,5 +8,6 @@ namespace Hyre.API.Interfaces.ReviewerJob
         Task<List<JobReviewerDto>> GetJobReviewersAsync(int jobId);
         Task RemoveReviewerAsync(int jobId, string reviewerId);
         Task<List<JobResponseDto>> GetJobsByReviewerStatusAsync(string status);
+        Task<List<ReviewerDto>> GetAllReviewersAsync();
     }
 }

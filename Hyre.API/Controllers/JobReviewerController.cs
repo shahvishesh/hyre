@@ -93,5 +93,21 @@ namespace Hyre.API.Controllers
             }
         }
 
+        // Get all reviewers
+        [HttpGet("reviewers")]
+        [Authorize(Roles = "Recruiter,Admin,HR")]
+        public async Task<IActionResult> GetAllReviewers()
+        {
+            try
+            {
+                var reviewers = await _service.GetAllReviewersAsync();
+                return Ok(reviewers);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
     }
 }

@@ -101,5 +101,17 @@ namespace Hyre.API.Services
                 )).ToList()
             )).ToList();
         }
+
+        public async Task<List<ReviewerDto>> GetAllReviewersAsync()
+        {
+            var reviewers = await _userManager.GetUsersInRoleAsync("Reviewer");
+            
+            return reviewers.Select(reviewer => new ReviewerDto(
+                reviewer.Id,
+                reviewer.FirstName,
+                reviewer.LastName,
+                reviewer.Email ?? string.Empty
+            )).ToList();
+        }
     }
 }

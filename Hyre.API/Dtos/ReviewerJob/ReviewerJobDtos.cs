@@ -24,5 +24,11 @@
             int SkillID,
             string SkillName,
             string SkillType);
+
+        public record ReviewerDto(
+            string Id,
+            string FirstName,
+            string LastName,
+            string Email);
     }
 }
