@@ -77,5 +77,29 @@ namespace Hyre.API.Services
             }
             await _repo.RemoveReviewerAsync(jobId, reviewerId);
         }
+
+        public async Task<List<JobResponseDto>> GetJobsByReviewerStatusAsync(string status)
+        {
+            var jobs = await _repo.GetJobsByReviewerStatusAsync(status);
+            
+            return jobs.Select(job => new JobResponseDto(
+                job.JobID,
+                job.Title,
+                job.Description,
+                job.MinExperience,
+                job.MaxExperience,
+                job.CompanyName,
+                job.Location,
+                job.JobType,
+                job.WorkplaceType,
+                job.Status,
+                job.CreatedAt,
+                job.JobSkills.Select(js => new JobSkillDetailDto(
+                    js.SkillID,
+                    js.Skill?.SkillName ?? "Unknown",
+                    js.SkillType
+                )).ToList()
+            )).ToList();
+        }
     }
 }

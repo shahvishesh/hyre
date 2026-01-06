@@ -61,6 +61,32 @@ namespace Hyre.API.Repositories
             return await _context.JobReviewers
                 .AnyAsync(jr => jr.JobId == jobId && jr.ReviewerId == reviewerId);
         }
+
+        public async Task<List<Job>> GetJobsByReviewerStatusAsync(string status)
+        {
+            if (status.ToLower() == "pending")
+            {
+                // Jobs where no reviewers are assigned
+                return await _context.Jobs
+                    .Include(j => j.JobSkills)
+                        .ThenInclude(js => js.Skill)
+                    .Where(j => !_context.JobReviewers.Any(jr => jr.JobId == j.JobID))
+                    .ToListAsync();
+            }
+            else if (status.ToLower() == "completed")
+            {
+                // Jobs where at least one reviewer is assigned
+                return await _context.Jobs
+                    .Include(j => j.JobSkills)
+                        .ThenInclude(js => js.Skill)
+                    .Where(j => _context.JobReviewers.Any(jr => jr.JobId == j.JobID))
+                    .ToListAsync();
+            }
+            else
+            {
+                throw new ArgumentException("Invalid status. Use 'pending' or 'completed'.");
+            }
+        }
     }
 
 }

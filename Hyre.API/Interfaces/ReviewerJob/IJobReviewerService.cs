@@ -7,5 +7,6 @@ namespace Hyre.API.Interfaces.ReviewerJob
         Task AssignReviewersAsync(AssignReviewerDto dto, string recruiterId);
         Task<List<JobReviewerDto>> GetJobReviewersAsync(int jobId);
         Task RemoveReviewerAsync(int jobId, string reviewerId);
+        Task<List<JobResponseDto>> GetJobsByReviewerStatusAsync(string status);
     }
 }

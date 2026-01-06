@@ -70,5 +70,28 @@ namespace Hyre.API.Controllers
             }
         }
 
+        // Get jobs by reviewer assignment status
+        [HttpGet("jobs")]
+        [Authorize(Roles = "Recruiter")]
+        public async Task<IActionResult> GetJobsByReviewerStatus([FromQuery] string status)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(status))
+                    return BadRequest(new { message = "Status query parameter is required. Use 'pending' or 'completed'." });
+
+                var jobs = await _service.GetJobsByReviewerStatusAsync(status);
+                return Ok(jobs);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
     }
 }
