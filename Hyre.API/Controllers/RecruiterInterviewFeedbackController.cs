@@ -31,5 +31,19 @@ namespace Hyre.API.Controllers
             var result = await _service.GetRoundsByDecisionStateAsync(candidateId, jobId, state);
             return Ok(result);
         }
+
+        [HttpGet("job/{jobId}/interviewed-candidates")]
+        public async Task<IActionResult> GetInterviewedCandidatesForJob(int jobId)
+        {
+            var result = await _service.GetInterviewedCandidatesForJobAsync(jobId);
+            return Ok(result);
+        }
+
+        [HttpGet("round-detail/{candidateRoundId}")]
+        public async Task<IActionResult> GetRoundDetail(int candidateRoundId)
+        {
+            var result = await _service.GetRoundDetailAsync(candidateRoundId);
+            return Ok(result);
+        }
     }
 }
