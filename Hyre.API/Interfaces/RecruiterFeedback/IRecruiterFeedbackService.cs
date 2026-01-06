@@ -7,6 +7,7 @@ namespace Hyre.API.Interfaces.RecruiterFeedback
     {
         Task<RoundAggregatedFeedbackDto> GetAggregatedFeedbackAsync(int roundId);
         Task<IEnumerable<PendingRecruiterDecisionDto>> GetRoundsByDecisionStateAsync(int candidateId, int jobId, RecruiterDecisionState decisionState);
+        Task<IEnumerable<PendingRecruiterDecisionDto>> GetExpiredRoundsAsync(int candidateId, int jobId);
 
         Task<List<InterviewedCandidateDto>> GetInterviewedCandidatesForJobAsync(int jobId);
 

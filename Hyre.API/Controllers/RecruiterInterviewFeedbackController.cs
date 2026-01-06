@@ -32,6 +32,13 @@ namespace Hyre.API.Controllers
             return Ok(result);
         }
 
+        [HttpGet("job/{jobId}/candidate/{candidateId}/expired")]
+        public async Task<IActionResult> GetExpiredRounds(int jobId, int candidateId)
+        {
+            var result = await _service.GetExpiredRoundsAsync(candidateId, jobId);
+            return Ok(result);
+        }
+
         [HttpGet("job/{jobId}/interviewed-candidates")]
         public async Task<IActionResult> GetInterviewedCandidatesForJob(int jobId)
         {

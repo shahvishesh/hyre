@@ -50,6 +50,18 @@ namespace Hyre.API.Repositories
             return await query.OrderBy(r => r.SequenceNo).ToListAsync();
         }
 
+        public async Task<IEnumerable<CandidateInterviewRound>> GetExpiredRoundsAsync(int candidateId, int jobId)
+        {
+            return await _context.CandidateInterviewRounds
+                .Include(r => r.Candidate)
+                .Include(r => r.Job)
+                .Where(r => r.CandidateID == candidateId && 
+                           r.JobID == jobId && 
+                           r.Status == "Expired")
+                .OrderBy(r => r.SequenceNo)
+                .ToListAsync();
+        }
+
         public async Task<List<Candidate>> GetInterviewedCandidatesForJobAsync(int jobId)
         {
             return await _context.CandidateInterviewRounds

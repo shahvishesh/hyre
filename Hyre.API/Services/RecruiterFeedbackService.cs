@@ -82,6 +82,23 @@ namespace Hyre.API.Services
             ));
         }
 
+        public async Task<IEnumerable<PendingRecruiterDecisionDto>> GetExpiredRoundsAsync(int candidateId, int jobId)
+        {
+            var rounds = await _repo.GetExpiredRoundsAsync(candidateId, jobId);
+
+            return rounds.Select(r => new PendingRecruiterDecisionDto(
+                r.CandidateRoundID,
+                r.CandidateID,
+                $"{r.Candidate.FirstName} {r.Candidate.LastName}",
+                r.JobID,
+                r.Job.Title,
+                r.RoundName,
+                r.RoundType ?? string.Empty,
+                r.ScheduledDate ?? DateTime.MinValue,
+                r.Status
+            ));
+        }
+
         public async Task<List<InterviewedCandidateDto>> GetInterviewedCandidatesForJobAsync(int jobId)
         {
             
