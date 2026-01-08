@@ -14,7 +14,7 @@ namespace Hyre.API.Repositories
             _context = context;
         }
 
-        public async Task AssignReviewersAsync(int jobId, List<string> reviewerIds, string assignedBy)
+        /*public async Task AssignReviewersAsync(int jobId, List<string> reviewerIds, string assignedBy)
         {
             var existing = await _context.JobReviewers
                 .Where(jr => jr.JobId == jobId)
@@ -34,7 +34,41 @@ namespace Hyre.API.Repositories
             }
 
             await _context.SaveChangesAsync();
+        }*/
+        public async Task AssignReviewersAsync(
+    int jobId,
+    List<string> reviewerIds,
+    string assignedBy)
+        {
+            var existing = await _context.JobReviewers
+                .Where(jr => jr.JobId == jobId)
+                .ToListAsync();
+
+            var existingIds = existing.Select(e => e.ReviewerId).ToList();
+
+            // Add new reviewers
+            var toAdd = reviewerIds.Except(existingIds).ToList();
+            foreach (var reviewerId in toAdd)
+            {
+                _context.JobReviewers.Add(new JobReviewer
+                {
+                    JobId = jobId,
+                    ReviewerId = reviewerId,
+                    AssignedBy = assignedBy,
+                    AssignedAt = DateTime.UtcNow
+                });
+            }
+
+            // Remove unselected reviewers
+            var toRemove = existing
+                .Where(e => !reviewerIds.Contains(e.ReviewerId))
+                .ToList();
+
+            _context.JobReviewers.RemoveRange(toRemove);
+
+            await _context.SaveChangesAsync();
         }
+
 
         public async Task<List<JobReviewer>> GetReviewersByJobIdAsync(int jobId)
         {
