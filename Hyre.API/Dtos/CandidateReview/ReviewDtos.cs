@@ -32,5 +32,20 @@ namespace Hyre.API.Dtos.CandidateReview
             List<CommentResponseDto> Comments
         );
 
+        public record ReviewerJobDto(
+            int JobID,
+            string Title,
+            string Description,
+            string CompanyName,
+            string Location,
+            string JobType,
+            string WorkplaceType,
+            string Status,
+            int? MinExperience,
+            int? MaxExperience,
+            DateTime CreatedAt,
+            int PendingProfilesCount
+        );
+
     }
 }

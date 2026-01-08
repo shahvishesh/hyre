@@ -147,5 +147,26 @@ namespace Hyre.API.Controllers
                 return NotFound(new { message = ex.Message });
             }
         }
+
+        [HttpGet("reviewer/jobs")]
+        [Authorize(Roles = "Reviewer")]
+        public async Task<IActionResult> GetJobsAssignedToReviewer()
+        {
+            try
+            {
+                var userId = GetUserId();
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized(new { Message = "User is not authenticated." });
+                }
+
+                var jobs = await _service.GetJobsAssignedToReviewerAsync(userId);
+                return Ok(jobs);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Message = ex.Message });
+            }
+        }
     }
 }

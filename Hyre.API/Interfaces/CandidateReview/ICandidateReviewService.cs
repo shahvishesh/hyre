@@ -9,7 +9,7 @@ namespace Hyre.API.Interfaces.CandidateReview
         Task AddCommentAsync(AddCommentDto dto, string commenterId);
         Task ApplyRecruiterDecisionAsync(RecruiterDecisionDto dto, string recruiterId);
         Task<IEnumerable<ReviewResponseDto>> GetReviewsByJobAsync(int jobId);
-
         Task<byte[]> GetCandidateResumeAsync(int candidateId, string requesterId, int jobId, IEnumerable<string> userRoles);
+        Task<List<ReviewerJobDto>> GetJobsAssignedToReviewerAsync(string reviewerId);
     }
 }

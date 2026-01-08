@@ -341,5 +341,34 @@ namespace Hyre.API.Services
             return fileBytes;
         }
 
+        public async Task<List<ReviewerJobDto>> GetJobsAssignedToReviewerAsync(string reviewerId)
+        {
+            var jobsWithCounts = await _context.JobReviewers
+                .Where(jr => jr.ReviewerId == reviewerId)
+                .Select(jr => new
+                {
+                    Job = jr.Job,
+                    PendingCount = _context.CandidateJobs
+                        .Where(cj => cj.JobID == jr.JobId)
+                        .Count(cj => !_context.CandidateReviews.Any(cr => cr.CandidateJobID == cj.CandidateJobID))
+                })
+                .Distinct()
+                .ToListAsync();
+
+            return jobsWithCounts.Select(item => new ReviewerJobDto(
+                item.Job.JobID,
+                item.Job.Title,
+                item.Job.Description ?? string.Empty,
+                item.Job.CompanyName,
+                item.Job.Location ?? string.Empty,
+                item.Job.JobType,
+                item.Job.WorkplaceType,
+                item.Job.Status,
+                item.Job.MinExperience,
+                item.Job.MaxExperience,
+                item.Job.CreatedAt,
+                item.PendingCount
+            )).ToList();
+        }
     }
 }
