@@ -183,5 +183,27 @@ namespace Hyre.API.Controllers
                 return BadRequest(new { Message = ex.Message });
             }
         }
+
+        [HttpGet("job/{jobId}/candidates")]
+        [Authorize(Roles = "Recruiter,Admin,HR")]
+        public async Task<IActionResult> GetCandidatesByRecruitmentStatus(int jobId, [FromQuery] string status)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(status))
+                    return BadRequest(new { Message = "Status query parameter is required. Use 'pending' or 'completed'." });
+
+                var candidates = await _service.GetCandidatesByRecruitmentStatusAsync(jobId, status);
+                return Ok(candidates);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { Message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Message = ex.Message });
+            }
+        }
     }
 }

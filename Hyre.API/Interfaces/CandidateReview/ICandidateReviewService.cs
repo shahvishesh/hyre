@@ -1,4 +1,5 @@
 ﻿using static Hyre.API.Dtos.CandidateReview.ReviewDtos;
+using Hyre.API.Dtos.Feedback;
 
 namespace Hyre.API.Interfaces.CandidateReview
 {
@@ -12,5 +13,6 @@ namespace Hyre.API.Interfaces.CandidateReview
         Task<byte[]> GetCandidateResumeAsync(int candidateId, string requesterId, int jobId, IEnumerable<string> userRoles);
         Task<List<ReviewerJobDto>> GetJobsAssignedToReviewerAsync(string reviewerId);
         Task<List<ReviewerJobDto>> GetOpenJobsWithPendingReviewsAsync();
+        Task<List<InterviewedCandidateDto>> GetCandidatesByRecruitmentStatusAsync(int jobId, string status);
     }
 }

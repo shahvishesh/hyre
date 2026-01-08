@@ -1,4 +1,5 @@
 ﻿using Hyre.API.Data;
+using Hyre.API.Dtos.Feedback;
 using Hyre.API.Exceptions;
 using Hyre.API.Interfaces;
 using Hyre.API.Interfaces.CandidateReview;
@@ -397,6 +398,51 @@ namespace Hyre.API.Services
                 item.Job.MaxExperience,
                 item.Job.CreatedAt,
                 item.PendingCount
+            )).ToList();
+        }
+
+        public async Task<List<InterviewedCandidateDto>> GetCandidatesByRecruitmentStatusAsync(int jobId, string status)
+        {
+            IQueryable<CandidateReview> reviewQuery = _context.CandidateReviews
+                .Include(cr => cr.CandidateJob)
+                    .ThenInclude(cj => cj.Candidate)
+                    .ThenInclude(c => c.CandidateSkills)
+                    .ThenInclude(cs => cs.Skill)
+                .Where(cr => cr.CandidateJob.JobID == jobId);
+
+            // Filter based on recruiter decision status
+            if (status.ToLower() == "pending")
+            {
+                reviewQuery = reviewQuery.Where(cr => cr.RecruiterDecision == null);
+            }
+            else if (status.ToLower() == "completed")
+            {
+                reviewQuery = reviewQuery.Where(cr => cr.RecruiterDecision != null);
+            }
+            else
+            {
+                throw new ArgumentException("Invalid status. Use 'pending' or 'completed'.");
+            }
+
+            var reviews = await reviewQuery.ToListAsync();
+
+            return reviews.Select(review => new InterviewedCandidateDto(
+                review.CandidateJob.Candidate.CandidateID,
+                review.CandidateJob.Candidate.FirstName,
+                review.CandidateJob.Candidate.LastName,
+                review.CandidateJob.Candidate.Email,
+                review.CandidateJob.Candidate.Phone,
+                review.CandidateJob.Candidate.ExperienceYears,
+                review.CandidateJob.Candidate.ResumePath,
+                review.CandidateJob.Candidate.Status,
+                review.CandidateJob.Candidate.CandidateSkills?
+                    .Where(cs => cs.Skill != null)
+                    .Select(cs => new CandidateSkillDto(
+                        cs.SkillID,
+                        cs.Skill.SkillName,
+                        cs.YearsOfExperience
+                    ))
+                    .ToList() ?? new List<CandidateSkillDto>()
             )).ToList();
         }
     }
