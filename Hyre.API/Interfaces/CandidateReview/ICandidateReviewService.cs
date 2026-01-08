@@ -14,5 +14,6 @@ namespace Hyre.API.Interfaces.CandidateReview
         Task<List<ReviewerJobDto>> GetJobsAssignedToReviewerAsync(string reviewerId);
         Task<List<ReviewerJobDto>> GetOpenJobsWithPendingReviewsAsync();
         Task<List<InterviewedCandidateDto>> GetCandidatesByRecruitmentStatusAsync(int jobId, string status);
+        Task<ReviewerResponseDto?> GetCandidateReviewForJobAsync(int candidateId, int jobId);
     }
 }

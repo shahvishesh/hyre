@@ -445,5 +445,40 @@ namespace Hyre.API.Services
                     .ToList() ?? new List<CandidateSkillDto>()
             )).ToList();
         }
+
+        public async Task<ReviewerResponseDto?> GetCandidateReviewForJobAsync(int candidateId, int jobId)
+        {
+            var candidateJob = await _context.CandidateJobs
+                .FirstOrDefaultAsync(cj => cj.CandidateID == candidateId && cj.JobID == jobId);
+
+            if (candidateJob == null)
+                return null;
+
+            var review = await _context.CandidateReviews
+                .Include(r => r.Reviewer)
+                .Include(r => r.SkillReviews)
+                    .ThenInclude(sr => sr.Skill)
+                .FirstOrDefaultAsync(r => r.CandidateJobID == candidateJob.CandidateJobID);
+
+            if (review == null)
+                return null;
+
+            var skills = review.SkillReviews.Select(sr => new ReviewedSkillDto(
+                sr.SkillId,
+                sr.IsVerified,
+                sr.VerifiedYearsOfExperience
+            )).ToList();
+
+            return new ReviewerResponseDto(
+                review.ReviewID,
+                review.CandidateJobID,
+                $"{review.Reviewer.FirstName} {review.Reviewer.LastName}",
+                review.Decision,
+                review.Comment,
+                review.RecruiterDecision,
+                review.ReviewedAt,
+                skills
+            );
+        }
     }
 }

@@ -205,5 +205,24 @@ namespace Hyre.API.Controllers
                 return BadRequest(new { Message = ex.Message });
             }
         }
+
+        [HttpGet("candidate/{candidateId}/job/{jobId}")]
+        [Authorize(Roles = "Recruiter,Reviewer,Admin,HR")]
+        public async Task<IActionResult> GetCandidateReviewForJob(int candidateId, int jobId)
+        {
+            try
+            {
+                var review = await _service.GetCandidateReviewForJobAsync(candidateId, jobId);
+
+                if (review == null)
+                    return NotFound(new { Message = "No review found for this candidate and job combination." });
+
+                return Ok(review);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Message = ex.Message });
+            }
+        }
     }
 }

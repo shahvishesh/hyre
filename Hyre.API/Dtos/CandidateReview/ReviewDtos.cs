@@ -47,5 +47,15 @@ namespace Hyre.API.Dtos.CandidateReview
             int PendingProfilesCount
         );
 
+        public record ReviewerResponseDto(
+            int ReviewID,
+            int CandidateJobID,
+            string ReviewerName,
+            string Decision,
+            string? Comment,
+            string? RecruiterDecision,
+            DateTime ReviewedAt,
+            List<ReviewedSkillDto> Skills
+        );
     }
 }
