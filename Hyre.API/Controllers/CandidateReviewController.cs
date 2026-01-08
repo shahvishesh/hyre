@@ -168,5 +168,20 @@ namespace Hyre.API.Controllers
                 return BadRequest(new { Message = ex.Message });
             }
         }
+
+        [HttpGet("open-jobs")]
+        [Authorize(Roles = "Recruiter,Admin,HR")]
+        public async Task<IActionResult> GetOpenJobsWithPendingReviews()
+        {
+            try
+            {
+                var jobs = await _service.GetOpenJobsWithPendingReviewsAsync();
+                return Ok(jobs);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Message = ex.Message });
+            }
+        }
     }
 }

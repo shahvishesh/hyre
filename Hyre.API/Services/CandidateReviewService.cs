@@ -370,5 +370,34 @@ namespace Hyre.API.Services
                 item.PendingCount
             )).ToList();
         }
+
+        public async Task<List<ReviewerJobDto>> GetOpenJobsWithPendingReviewsAsync()
+        {
+            var openJobsWithCounts = await _context.Jobs
+                .Where(j => j.Status == "Open")
+                .Select(job => new
+                {
+                    Job = job,
+                    PendingCount = _context.CandidateReviews
+                        .Where(cr => _context.CandidateJobs.Any(cj => cj.JobID == job.JobID && cj.CandidateJobID == cr.CandidateJobID))
+                        .Count(cr => cr.RecruiterDecision == null)
+                })
+                .ToListAsync();
+
+            return openJobsWithCounts.Select(item => new ReviewerJobDto(
+                item.Job.JobID,
+                item.Job.Title,
+                item.Job.Description ?? string.Empty,
+                item.Job.CompanyName,
+                item.Job.Location ?? string.Empty,
+                item.Job.JobType,
+                item.Job.WorkplaceType,
+                item.Job.Status,
+                item.Job.MinExperience,
+                item.Job.MaxExperience,
+                item.Job.CreatedAt,
+                item.PendingCount
+            )).ToList();
+        }
     }
 }
