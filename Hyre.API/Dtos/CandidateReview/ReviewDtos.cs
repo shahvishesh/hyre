@@ -14,6 +14,12 @@ namespace Hyre.API.Dtos.CandidateReview
 
         public record RecruiterDecisionDto(int ReviewID, string Decision);
 
+        public record RecruiterDecisionResponseDto(
+            string? RecruiterDecision,
+            DateTime? RecruiterActionAt,
+            string? RecruiterName
+        );
+
         public record ReviewedSkillDto(
             int SkillId,
             bool IsVerified,

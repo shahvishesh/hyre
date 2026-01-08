@@ -224,5 +224,24 @@ namespace Hyre.API.Controllers
                 return BadRequest(new { Message = ex.Message });
             }
         }
+
+        [HttpGet("candidate/{candidateId}/job/{jobId}/recruiter-decision")]
+        [Authorize(Roles = "Recruiter,Admin,HR")]
+        public async Task<IActionResult> GetRecruiterDecision(int candidateId, int jobId)
+        {
+            try
+            {
+                var decision = await _service.GetRecruiterDecisionAsync(candidateId, jobId);
+
+                if (decision == null)
+                    return NotFound(new { Message = "No review found for this candidate and job combination." });
+
+                return Ok(decision);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Message = ex.Message });
+            }
+        }
     }
 }

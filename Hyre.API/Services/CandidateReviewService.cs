@@ -480,5 +480,27 @@ namespace Hyre.API.Services
                 skills
             );
         }
+
+        public async Task<RecruiterDecisionResponseDto?> GetRecruiterDecisionAsync(int candidateId, int jobId)
+        {
+            var candidateJob = await _context.CandidateJobs
+                .FirstOrDefaultAsync(cj => cj.CandidateID == candidateId && cj.JobID == jobId);
+
+            if (candidateJob == null)
+                return null;
+
+            var review = await _context.CandidateReviews
+                .Include(r => r.Recruiter)
+                .FirstOrDefaultAsync(r => r.CandidateJobID == candidateJob.CandidateJobID);
+
+            if (review == null)
+                return null;
+
+            return new RecruiterDecisionResponseDto(
+                review.RecruiterDecision,
+                review.RecruiterActionAt,
+                review.Recruiter != null ? $"{review.Recruiter.FirstName} {review.Recruiter.LastName}".Trim() : null
+            );
+        }
     }
 }
