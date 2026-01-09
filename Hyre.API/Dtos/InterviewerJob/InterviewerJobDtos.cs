@@ -42,4 +42,13 @@
         string SkillName,
         string SkillType
     );
+
+    public record EmployeeDetailDto(
+        int EmployeeId,
+        string UserId,
+        string FullName,
+        string Email,
+        string? Designation,
+        string SystemRole
+    );
 }

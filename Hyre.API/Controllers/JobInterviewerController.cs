@@ -102,5 +102,16 @@ namespace Hyre.API.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+
+        [HttpGet("employees")]
+        public async Task<IActionResult> GetEmployeesByRole([FromQuery] string role)
+        {
+            if (string.IsNullOrWhiteSpace(role))
+                return BadRequest("Role is required");
+
+            var result = await _service.GetEmployeesBySystemRoleAsync(role);
+
+            return Ok(result);
+        }
     }
 }

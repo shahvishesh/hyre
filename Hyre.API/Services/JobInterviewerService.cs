@@ -146,5 +146,30 @@ namespace Hyre.API.Services
             )).ToList();
         }
 
+        public async Task<List<EmployeeDetailDto>> GetEmployeesBySystemRoleAsync(string role)
+        {
+            var employees =
+                await _repo.GetEmployeesByRoleAsync(role);
+
+            var result = new List<EmployeeDetailDto>();
+
+            foreach (var e in employees)
+            {
+                var roles = await _userManager
+                    .GetRolesAsync(e.User!);
+
+                result.Add(new EmployeeDetailDto(
+                    e.EmployeeID,
+                    e.UserID!,  
+                    $"{e.FirstName} {e.LastName}".Trim(),
+                    e.User!.Email!,
+                    e.Designation,
+                    roles.First() 
+                ));
+            }
+
+            return result;
+        }
+
     }
 }

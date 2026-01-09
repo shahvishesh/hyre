@@ -2,6 +2,7 @@
 using Hyre.API.Interfaces;
 using Hyre.API.Interfaces.InterviewerJob;
 using Hyre.API.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace Hyre.API.Repositories
@@ -9,10 +10,12 @@ namespace Hyre.API.Repositories
     public class JobInterviewerRepository : IJobInterviewerRepository
     {
         private readonly ApplicationDbContext _context;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public JobInterviewerRepository(ApplicationDbContext context)
+        public JobInterviewerRepository(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
         public async Task<bool> AnyForJobAsync(int jobId)
@@ -86,6 +89,22 @@ namespace Hyre.API.Repositories
             }
 
             return await query.ToListAsync();
+        }
+
+        public async Task<List<Employee>> GetEmployeesByRoleAsync(string roleName)
+        {
+            var usersInRole = await _userManager.GetUsersInRoleAsync(roleName);
+
+            var userIds = usersInRole
+                .Select(u => u.Id)
+                .ToList();
+
+            return await _context.Employees
+                .Include(e => e.User)
+                .Where(e => e.UserID != null
+                 && userIds.Contains(e.UserID)
+                 && e.EmploymentStatus == "Active") 
+                .ToListAsync();
         }
     }
 }
