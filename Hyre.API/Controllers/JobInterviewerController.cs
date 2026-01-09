@@ -81,5 +81,26 @@ namespace Hyre.API.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+
+        [HttpGet("jobs")]
+        public async Task<IActionResult> GetJobsByInterviewerStatus([FromQuery] string status)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(status))
+                    return BadRequest("Status query parameter is required. Use 'pending' or 'completed'.");
+
+                var jobs = await _service.GetJobsByInterviewerStatusAsync(status);
+                return Ok(jobs);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
     }
 }

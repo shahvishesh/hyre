@@ -21,4 +21,25 @@
         string? SkillArea,
         DateTime AssignedAt
     );
+
+    public record InterviewerJobResponseDto(
+        int JobID,
+        string Title,
+        string? Description,
+        int? MinExperience,
+        int? MaxExperience,
+        string CompanyName,
+        string? Location,
+        string JobType,
+        string WorkplaceType,
+        string Status,
+        DateTime CreatedAt,
+        List<JobSkillDetailDto> Skills
+    );
+
+    public record JobSkillDetailDto(
+        int SkillID,
+        string SkillName,
+        string SkillType
+    );
 }

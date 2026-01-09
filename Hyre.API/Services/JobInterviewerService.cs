@@ -115,5 +115,36 @@ namespace Hyre.API.Services
             )).ToList();
         }
 
+        public async Task<List<InterviewerJobResponseDto>> GetJobsByInterviewerStatusAsync(string status)
+        {
+            if (string.IsNullOrEmpty(status) ||
+                (!status.Equals("pending", StringComparison.OrdinalIgnoreCase) &&
+                 !status.Equals("completed", StringComparison.OrdinalIgnoreCase)))
+            {
+                throw new ArgumentException("Status must be either 'pending' or 'completed'");
+            }
+
+            var jobs = await _repo.GetJobsByInterviewerStatusAsync(status);
+
+            return jobs.Select(job => new InterviewerJobResponseDto(
+                job.JobID,
+                job.Title,
+                job.Description,
+                job.MinExperience,
+                job.MaxExperience,
+                job.CompanyName,
+                job.Location,
+                job.JobType,
+                job.WorkplaceType,
+                job.Status,
+                job.CreatedAt,
+                job.JobSkills?.Select(js => new JobSkillDetailDto(
+                    js.SkillID,
+                    js.Skill?.SkillName ?? string.Empty,
+                    js.SkillType
+                )).ToList() ?? new List<JobSkillDetailDto>()
+            )).ToList();
+        }
+
     }
 }

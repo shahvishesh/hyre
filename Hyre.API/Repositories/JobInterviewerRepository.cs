@@ -66,5 +66,26 @@ namespace Hyre.API.Repositories
                 await _context.SaveChangesAsync();
             }
         }
+
+        public async Task<List<Job>> GetJobsByInterviewerStatusAsync(string status)
+        {
+            var query = _context.Jobs
+                .Include(j => j.JobSkills)
+                    .ThenInclude(js => js.Skill)
+                .AsQueryable();
+
+            if (status.ToLower() == "pending")
+            {
+                query = query.Where(j => !_context.JobInterviewers
+                    .Any(ji => ji.JobID == j.JobID && ji.IsActive));
+            }
+            else if (status.ToLower() == "completed")
+            {
+                query = query.Where(j => _context.JobInterviewers
+                    .Any(ji => ji.JobID == j.JobID && ji.IsActive));
+            }
+
+            return await query.ToListAsync();
+        }
     }
 }

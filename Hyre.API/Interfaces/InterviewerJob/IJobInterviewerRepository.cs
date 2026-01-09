@@ -11,5 +11,6 @@ namespace Hyre.API.Interfaces.InterviewerJob
         Task<List<JobInterviewer>> GetAssignedByRoleAsync(int jobId, string role);
         Task AddAsync(JobInterviewer entity);
         Task RemoveAsync(int jobId, string interviewerId);
+        Task<List<Job>> GetJobsByInterviewerStatusAsync(string status);
     }
 }
