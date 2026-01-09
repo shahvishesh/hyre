@@ -57,5 +57,7 @@ namespace Hyre.API.Data
 
         public DbSet<InterviewSkillRating> InterviewSkillRatings { get; set; }
 
+        public DbSet<Employee> Employees { get; set; }
+
         }
 }
