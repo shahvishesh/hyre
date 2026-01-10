@@ -1,5 +1,6 @@
 ﻿using Azure.Core;
 using Hyre.API.Data;
+using Hyre.API.Dtos.Feedback;
 using Hyre.API.Dtos.Scheduling;
 using Hyre.API.Interfaces;
 using Hyre.API.Interfaces.Candidates;
@@ -282,6 +283,91 @@ namespace Hyre.API.Services
                 job.MaxExperience,
                 job.CreatedAt,
                 pendingProfilesCounts.GetValueOrDefault(job.JobID, 0)
+            )).ToList();
+        }
+
+        public async Task<List<InterviewedCandidateDto>> GetCandidatesBySchedulingStatusAsync(int jobId, string status)
+        {
+            if (string.IsNullOrEmpty(status))
+                throw new ArgumentException("Status parameter is required");
+
+            status = status.ToLower();
+            if (status != "pending" && status != "completed")
+                throw new ArgumentException("Status must be 'pending' or 'completed'");
+
+            var job = await _jobService.GetJobByIdAsync(jobId);
+            if (job == null)
+                throw new Exception($"Job with ID {jobId} not found");
+
+            List<int> candidateIds;
+
+            if (status == "pending")
+            {
+                candidateIds = await _context.CandidateInterviewRounds
+                    .Where(r => r.JobID == jobId &&
+                        (
+                            r.Status == "Pending" ||
+
+                            (r.Status != "Completed" && r.Status != "Cancelled" &&
+                             (r.ScheduledDate == null || r.StartTime == null ||
+                              (!r.IsPanelRound && r.InterviewerID == null) ||
+                              (r.IsPanelRound && !r.PanelMembers.Any()))
+                            )
+                        )
+                    )
+                    .Select(r => r.CandidateID)
+                    .Distinct()
+                    .ToListAsync();
+            }
+            else // completed
+            {
+                var candidatesWithRounds = await _context.CandidateInterviewRounds
+                    .Where(r => r.JobID == jobId)
+                    .GroupBy(r => r.CandidateID)
+                    .Select(g => new
+                    {
+                        CandidateID = g.Key,
+                        AllScheduled = g.All(r =>
+                            r.Status == "Scheduled" || r.Status == "Completed" ||
+                            (r.ScheduledDate != null && r.StartTime != null &&
+                             ((!r.IsPanelRound && r.InterviewerID != null) ||
+                              (r.IsPanelRound && r.PanelMembers.Any()))
+                            )
+                        )
+                    })
+                    .Where(x => x.AllScheduled)
+                    .Select(x => x.CandidateID)
+                    .ToListAsync();
+
+                candidateIds = candidatesWithRounds;
+            }
+
+            if (!candidateIds.Any())
+                return new List<InterviewedCandidateDto>();
+
+            var candidates = await _context.Candidates
+                .Include(c => c.CandidateSkills)
+                    .ThenInclude(cs => cs.Skill)
+                .Where(c => candidateIds.Contains(c.CandidateID))
+                .ToListAsync();
+
+            return candidates.Select(c => new InterviewedCandidateDto(
+                c.CandidateID,
+                c.FirstName,
+                c.LastName,
+                c.Email,
+                c.Phone,
+                c.ExperienceYears,
+                c.ResumePath,
+                c.Status,
+                c.CandidateSkills?
+                    .Where(cs => cs.Skill != null)
+                    .Select(cs => new CandidateSkillDto(
+                        cs.SkillID,
+                        cs.Skill.SkillName,
+                        cs.YearsOfExperience
+                    ))
+                    .ToList() ?? new List<CandidateSkillDto>()
             )).ToList();
         }
     }

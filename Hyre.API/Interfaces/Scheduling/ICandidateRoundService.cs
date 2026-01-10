@@ -1,4 +1,5 @@
-﻿using Hyre.API.Dtos.Scheduling;
+﻿using Hyre.API.Dtos.Feedback;
+using Hyre.API.Dtos.Scheduling;
 
 namespace Hyre.API.Interfaces.Scheduling
 {
@@ -7,5 +8,6 @@ namespace Hyre.API.Interfaces.Scheduling
         Task<List<CandidateRoundDto>> GetCandidateRoundsAsync(int candidateId, int jobId);
         Task<UpsertRoundResponseDto> UpsertCandidateRoundsAsync(CandidateRoundsUpdateDto dto, string recruiterId);
         Task<List<JobScheduleStateDto>> GetJobsWithSchedulingStateAsync();
+        Task<List<InterviewedCandidateDto>> GetCandidatesBySchedulingStatusAsync(int jobId, string status);
     }
 }
