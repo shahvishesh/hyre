@@ -113,5 +113,34 @@ namespace Hyre.API.Controllers
 
             return Ok(result);
         }
+
+        [HttpPost("assign-v2")]
+        public async Task<IActionResult> AssignInterviewersV2([FromBody] AssignInterviewersV2Dto dto)
+        {
+            try
+            {
+                var recruiterId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                await _service.AssignInterviewersV2Async(dto, recruiterId);
+                return Ok(new { message = "Interviewer assignments updated successfully." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpGet("{jobId}/assigned-interviewers")]
+        public async Task<IActionResult> GetJobAssignedInterviewers(int jobId)
+        {
+            try
+            {
+                var result = await _service.GetJobAssignedInterviewersAsync(jobId);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
     }
 }

@@ -7,6 +7,17 @@
         string? SkillArea
     );
 
+    // New DTOs for the updated method
+    public record AssignInterviewersV2Dto(
+        int JobID,
+        List<InterviewerAssignmentDto> Assignments
+    );
+
+    public record InterviewerAssignmentDto(
+        string InterviewerID,
+        string InterviewRole   // Technical / HR / Managerial
+    );
+
     public record RemoveInterviewerDto(
         int JobID,
         string InterviewerID
@@ -49,6 +60,22 @@
         string FullName,
         string Email,
         string? Designation,
-        string SystemRole
+        List<string> SystemRoles
+    );
+
+    // New DTOs for assigned interviewers
+    public record AssignedInterviewerDto(
+        string InterviewerID,
+        string FullName,
+        string Email,
+        string? Designation,
+        List<string> SystemRoles,
+        string InterviewRole,   // Technical / HR / Managerial
+        DateTime AssignedAt
+    );
+
+    public record JobAssignedInterviewersDto(
+        int JobID,
+        List<AssignedInterviewerDto> Interviewers
     );
 }

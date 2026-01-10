@@ -56,6 +56,132 @@ namespace Hyre.API.Services
             }
         }
 
+        /*public async Task AssignInterviewersV2Async(AssignInterviewersV2Dto dto, string recruiterId)
+        {
+            var job = await _jobService.GetJobByIdAsync(dto.JobID);
+            if (job == null)
+            {
+                throw new Exception("Job not found");
+            }
+
+            // Get currently assigned interviewers for this job
+            var currentAssignments = await _repo.GetAssignedAsync(dto.JobID);
+            var currentInterviewerIds = currentAssignments.Select(x => x.InterviewerID).ToHashSet();
+
+            // Get new interviewer IDs from the request
+            var newInterviewerIds = dto.Assignments.Select(x => x.InterviewerID).ToHashSet();
+
+            // Find interviewers to remove (currently assigned but not in new list)
+            var interviewersToRemove = currentInterviewerIds.Except(newInterviewerIds);
+
+            // Find interviewers to add (in new list but not currently assigned)
+            var interviewersToAdd = dto.Assignments.Where(x => !currentInterviewerIds.Contains(x.InterviewerID));
+
+            // Find interviewers to update (in both lists but potentially different interview roles)
+            var interviewersToUpdate = dto.Assignments.Where(x => currentInterviewerIds.Contains(x.InterviewerID));
+
+            // Remove interviewers no longer in the list
+            foreach (var interviewerId in interviewersToRemove)
+            {
+                await _repo.RemoveAsync(dto.JobID, interviewerId);
+            }
+
+            // Add new interviewers
+            foreach (var assignment in interviewersToAdd)
+            {
+                var user = await _userManager.FindByIdAsync(assignment.InterviewerID);
+                if (user == null)
+                {
+                    throw new Exception($"Interviewer with ID {assignment.InterviewerID} not found");
+                }
+
+                var entity = new JobInterviewer
+                {
+                    JobID = dto.JobID,
+                    InterviewerID = assignment.InterviewerID,
+                    Role = assignment.InterviewRole,
+                    SkillArea = null,
+                    AssignedBy = recruiterId
+                };
+
+                await _repo.AddAsync(entity);
+            }
+
+            // Update existing interviewers if their interview role has changed - NO NEED TO REMOVE/ADD
+            foreach (var assignment in interviewersToUpdate)
+            {
+                var existingAssignment = currentAssignments.First(x => x.InterviewerID == assignment.InterviewerID);
+                if (existingAssignment.Role != assignment.InterviewRole)
+                {
+                    // Just update the existing record instead of remove/add
+                    await _repo.UpdateInterviewerRoleAsync(dto.JobID, assignment.InterviewerID, assignment.InterviewRole);
+                }
+            }
+        }*/
+
+        public async Task AssignInterviewersV2Async(AssignInterviewersV2Dto dto, string recruiterId)
+        {
+            var job = await _jobService.GetJobByIdAsync(dto.JobID);
+            if (job == null)
+            {
+                throw new Exception("Job not found");
+            }
+
+            var currentAssignments = await _repo.GetAssignedAsync(dto.JobID);
+            var currentInterviewerIds = currentAssignments.Select(x => x.InterviewerID).ToHashSet();
+
+            var newInterviewerIds = dto.Assignments.Select(x => x.InterviewerID).ToHashSet();
+
+            var interviewersToRemove = currentInterviewerIds.Except(newInterviewerIds);
+
+            var interviewersToAdd = dto.Assignments.Where(x => !currentInterviewerIds.Contains(x.InterviewerID));
+
+            var interviewersToUpdate = dto.Assignments.Where(x => currentInterviewerIds.Contains(x.InterviewerID));
+
+            foreach (var interviewerId in interviewersToRemove)
+            {
+                await _repo.RemoveAsync(dto.JobID, interviewerId);
+            }
+
+            foreach (var assignment in interviewersToAdd)
+            {
+                var user = await _userManager.FindByIdAsync(assignment.InterviewerID);
+                if (user == null)
+                {
+                    throw new Exception($"Interviewer with ID {assignment.InterviewerID} not found");
+                }
+
+                var existingInactiveAssignment = await _repo.GetInactiveAssignmentAsync(dto.JobID, assignment.InterviewerID);
+
+                if (existingInactiveAssignment != null)
+                {
+                    await _repo.ReactivateAssignmentAsync(dto.JobID, assignment.InterviewerID, assignment.InterviewRole, recruiterId);
+                }
+                else
+                {
+                    var entity = new JobInterviewer
+                    {
+                        JobID = dto.JobID,
+                        InterviewerID = assignment.InterviewerID,
+                        Role = assignment.InterviewRole,
+                        SkillArea = null,
+                        AssignedBy = recruiterId
+                    };
+
+                    await _repo.AddAsync(entity);
+                }
+            }
+
+            foreach (var assignment in interviewersToUpdate)
+            {
+                var existingAssignment = currentAssignments.First(x => x.InterviewerID == assignment.InterviewerID);
+                if (existingAssignment.Role != assignment.InterviewRole)
+                {
+                    await _repo.UpdateInterviewerRoleAsync(dto.JobID, assignment.InterviewerID, assignment.InterviewRole);
+                }
+            }
+        }
+
         public async Task RemoveInterviewerAsync(int jobId, string interviewerId)
         {
             var user = await _userManager.FindByIdAsync(interviewerId);
@@ -164,11 +290,43 @@ namespace Hyre.API.Services
                     $"{e.FirstName} {e.LastName}".Trim(),
                     e.User!.Email!,
                     e.Designation,
-                    roles.First() 
+                    roles.ToList() 
                 ));
             }
 
             return result;
+        }
+
+        public async Task<JobAssignedInterviewersDto> GetJobAssignedInterviewersAsync(int jobId)
+        {
+            var job = await _jobService.GetJobByIdAsync(jobId);
+            if (job == null)
+            {
+                throw new Exception("Job not found");
+            }
+
+            var assignedInterviewers = await _repo.GetAssignedAsync(jobId);
+
+            var interviewerDtos = new List<AssignedInterviewerDto>();
+
+            foreach (var assignment in assignedInterviewers)
+            {
+                var employee = await _repo.GetEmployeeByUserIdAsync(assignment.InterviewerID);
+
+                var roles = await _userManager.GetRolesAsync(assignment.Interviewer);
+
+                interviewerDtos.Add(new AssignedInterviewerDto(
+                    assignment.InterviewerID,
+                    $"{assignment.Interviewer.FirstName} {assignment.Interviewer.LastName}".Trim(),
+                    assignment.Interviewer.Email ?? string.Empty,
+                    employee?.Designation,
+                    roles.ToList(),
+                    assignment.Role ?? string.Empty,
+                    assignment.AssignedAt
+                ));
+            }
+
+            return new JobAssignedInterviewersDto(jobId, interviewerDtos);
         }
 
     }

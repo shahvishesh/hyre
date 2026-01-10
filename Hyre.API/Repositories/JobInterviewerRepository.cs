@@ -106,5 +106,53 @@ namespace Hyre.API.Repositories
                  && e.EmploymentStatus == "Active") 
                 .ToListAsync();
         }
+
+        public async Task UpdateInterviewerRoleAsync(int jobId, string interviewerId, string newRole)
+        {
+            var entity = await _context.JobInterviewers
+                .FirstOrDefaultAsync(x =>
+                    x.JobID == jobId &&
+                    x.InterviewerID == interviewerId &&
+                    x.IsActive);
+
+            if (entity != null)
+            {
+                entity.Role = newRole;
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        public async Task<Employee?> GetEmployeeByUserIdAsync(string userId)
+        {
+            return await _context.Employees
+                .FirstOrDefaultAsync(e => e.UserID == userId && e.EmploymentStatus == "Active");
+        }
+
+        public async Task<JobInterviewer?> GetInactiveAssignmentAsync(int jobId, string interviewerId)
+        {
+            return await _context.JobInterviewers
+                .FirstOrDefaultAsync(x =>
+                    x.JobID == jobId &&
+                    x.InterviewerID == interviewerId &&
+                    !x.IsActive);
+        }
+
+        public async Task ReactivateAssignmentAsync(int jobId, string interviewerId, string newRole, string assignedBy)
+        {
+            var entity = await _context.JobInterviewers
+                .FirstOrDefaultAsync(x =>
+                    x.JobID == jobId &&
+                    x.InterviewerID == interviewerId &&
+                    !x.IsActive);
+
+            if (entity != null)
+            {
+                entity.IsActive = true;
+                entity.Role = newRole;
+                entity.AssignedBy = assignedBy;
+                entity.AssignedAt = DateTime.Now; 
+                await _context.SaveChangesAsync();
+            }
+        }
     }
 }
