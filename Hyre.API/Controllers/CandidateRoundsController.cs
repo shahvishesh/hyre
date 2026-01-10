@@ -43,5 +43,19 @@ namespace Hyre.API.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+
+        [HttpGet("jobs")]
+        public async Task<IActionResult> GetJobsWithSchedulingState()
+        {
+            try
+            {
+                var jobs = await _service.GetJobsWithSchedulingStateAsync();
+                return Ok(jobs);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
     }
 }

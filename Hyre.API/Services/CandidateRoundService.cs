@@ -246,5 +246,43 @@ namespace Hyre.API.Services
             var token = Guid.NewGuid().ToString("n").Substring(0, 8);
             return $"https://meet.jit.si/hyre-job{jobId}-cand{candidateId}-r{roundId}-{token}";
         }
+
+        public async Task<List<JobScheduleStateDto>> GetJobsWithSchedulingStateAsync()
+        {
+            var jobs = await _context.Jobs
+                .Where(j => j.Status == "Open")
+                .ToListAsync();
+
+            var pendingProfilesCounts = await _context.CandidateInterviewRounds
+                .Where(r => r.Job.Status == "Open" && 
+                    (
+                        r.Status == "Pending" ||
+
+                        (r.Status != "Completed" && r.Status != "Cancelled" &&
+                         (r.ScheduledDate == null || r.StartTime == null ||
+                          (!r.IsPanelRound && r.InterviewerID == null) ||
+                          (r.IsPanelRound && !r.PanelMembers.Any()))
+                        )
+                    )
+                )
+                .GroupBy(r => r.JobID)
+                .Select(g => new { JobID = g.Key, Count = g.Select(r => r.CandidateID).Distinct().Count() })
+                .ToDictionaryAsync(x => x.JobID, x => x.Count);
+
+            return jobs.Select(job => new JobScheduleStateDto(
+                job.JobID,
+                job.Title,
+                job.Description ?? string.Empty,
+                job.CompanyName,
+                job.Location ?? string.Empty,
+                job.JobType,
+                job.WorkplaceType,
+                job.Status,
+                job.MinExperience,
+                job.MaxExperience,
+                job.CreatedAt,
+                pendingProfilesCounts.GetValueOrDefault(job.JobID, 0)
+            )).ToList();
+        }
     }
 }

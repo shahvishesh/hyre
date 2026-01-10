@@ -6,5 +6,6 @@ namespace Hyre.API.Interfaces.Scheduling
     {
         Task<List<CandidateRoundDto>> GetCandidateRoundsAsync(int candidateId, int jobId);
         Task<UpsertRoundResponseDto> UpsertCandidateRoundsAsync(CandidateRoundsUpdateDto dto, string recruiterId);
+        Task<List<JobScheduleStateDto>> GetJobsWithSchedulingStateAsync();
     }
 }
