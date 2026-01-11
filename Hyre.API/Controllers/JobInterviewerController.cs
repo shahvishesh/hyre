@@ -142,5 +142,23 @@ namespace Hyre.API.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+
+        [HttpGet("{jobId}/interviewers/by-role")]
+        public async Task<IActionResult> GetJobAssignedInterviewersByRole(int jobId, [FromQuery] string role)
+        {
+            try
+            {
+                var result = await _service.GetJobAssignedInterviewersByRoleAsync(jobId, role);
+                return Ok(result);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
     }
 }

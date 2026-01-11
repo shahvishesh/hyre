@@ -12,5 +12,7 @@ namespace Hyre.API.Interfaces.InterviewerJob
         Task<List<InterviewerJobResponseDto>> GetJobsByInterviewerStatusAsync(string status);
         Task<List<EmployeeDetailDto>> GetEmployeesBySystemRoleAsync(string role);
         Task<JobAssignedInterviewersDto> GetJobAssignedInterviewersAsync(int jobId);
+
+        Task<JobAssignedInterviewersDto> GetJobAssignedInterviewersByRoleAsync(int jobId, string role);
     }
 }

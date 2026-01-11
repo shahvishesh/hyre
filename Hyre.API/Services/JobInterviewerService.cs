@@ -329,5 +329,51 @@ namespace Hyre.API.Services
             return new JobAssignedInterviewersDto(jobId, interviewerDtos);
         }
 
+        public async Task<JobAssignedInterviewersDto> GetJobAssignedInterviewersByRoleAsync(int jobId, string role)
+        {
+            var job = await _jobService.GetJobByIdAsync(jobId);
+            if (job == null)
+            {
+                throw new Exception("Job not found");
+            }
+
+            if (string.IsNullOrEmpty(role))
+            {
+                throw new ArgumentException("Role parameter is required");
+            }
+
+            if (!role.Equals("Interviewer", StringComparison.OrdinalIgnoreCase) &&
+                !role.Equals("HR", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new ArgumentException("Role must be either 'Interviewer' or 'HR'");
+            }
+
+            var assignedInterviewers = await _repo.GetAssignedAsync(jobId);
+
+            var interviewerDtos = new List<AssignedInterviewerDto>();
+
+            foreach (var assignment in assignedInterviewers)
+            {
+                var userRoles = await _userManager.GetRolesAsync(assignment.Interviewer);
+
+                if (!userRoles.Contains(role, StringComparer.OrdinalIgnoreCase))
+                    continue; 
+
+                var employee = await _repo.GetEmployeeByUserIdAsync(assignment.InterviewerID);
+
+                interviewerDtos.Add(new AssignedInterviewerDto(
+                    assignment.InterviewerID,
+                    $"{assignment.Interviewer.FirstName} {assignment.Interviewer.LastName}".Trim(),
+                    assignment.Interviewer.Email ?? string.Empty,
+                    employee?.Designation,
+                    userRoles.ToList(),
+                    assignment.Role ?? string.Empty, // This is the interview role (Technical, HR, Panel)
+                    assignment.AssignedAt
+                ));
+            }
+
+            return new JobAssignedInterviewersDto(jobId, interviewerDtos);
+        }
+
     }
 }
