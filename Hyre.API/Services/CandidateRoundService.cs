@@ -370,5 +370,279 @@ namespace Hyre.API.Services
                     .ToList() ?? new List<CandidateSkillDto>()
             )).ToList();
         }
+
+
+        /*--------------------------------------*/
+
+        public async Task<CandidateRoundDto> UpsertSingleRoundAsync(SingleCandidateRoundDto roundDto, string recruiterId)
+        {
+            if (roundDto == null) throw new ArgumentNullException(nameof(roundDto));
+
+            var candidateExists = await _candidateService.CandidateExistsAsync(roundDto.CandidateId);
+            if (!candidateExists)
+                throw new Exception($"Candidate with ID {roundDto.CandidateId} not found");
+
+            var job = await _jobService.GetJobByIdAsync(roundDto.JobId);
+            if (job == null)
+                throw new Exception($"Job with ID {roundDto.JobId} not found");
+
+            using var tx = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                CandidateInterviewRound dbRound;
+                bool isNewRound = !roundDto.CandidateRoundId.HasValue;
+
+                if (isNewRound)
+                {
+                    var roundCreate = new RoundCreateDto(
+                        roundDto.SequenceNo,
+                        roundDto.RoundName,
+                        roundDto.IsPanelRound,
+                        roundDto.InterviewerIds ?? new List<string>(),
+                        roundDto.InterviewMode,
+                        roundDto.ScheduledDate,
+                        roundDto.StartTime,
+                        roundDto.DurationMinutes,
+                        roundDto.RoundType
+                    );
+
+                    dbRound = await _interviewService.ScheduleSingleRoundAsync(
+                        roundCreate, roundDto.CandidateId, roundDto.JobId, recruiterId, saveChanges: false);
+                }
+                else
+                {
+                    // Update existing round
+                    dbRound = await _context.CandidateInterviewRounds
+                        .Include(r => r.PanelMembers)
+                        .FirstOrDefaultAsync(r => r.CandidateRoundID == roundDto.CandidateRoundId.Value);
+
+                    if (dbRound == null)
+                        throw new InvalidOperationException($"Round with ID {roundDto.CandidateRoundId.Value} not found");
+
+                    if (dbRound.CandidateID != roundDto.CandidateId || dbRound.JobID != roundDto.JobId)
+                        throw new InvalidOperationException("Round does not belong to the specified candidate and job");
+
+                    if (roundDto.ScheduledDate.HasValue && roundDto.StartTime.HasValue && roundDto.InterviewerIds?.Any() == true)
+                    {
+                        var roundCreate = new RoundCreateDto(
+                            roundDto.SequenceNo,
+                            roundDto.RoundName,
+                            roundDto.IsPanelRound,
+                            roundDto.InterviewerIds,
+                            roundDto.InterviewMode,
+                            roundDto.ScheduledDate,
+                            roundDto.StartTime,
+                            roundDto.DurationMinutes,
+                            roundDto.RoundType
+                        );
+
+                        // Validate using existing logic (will check conflicts with other rounds)
+                        //await ValidateSingleRoundUpdate(roundCreate, roundDto.CandidateId, roundDto.JobId, dbRound.CandidateRoundID);
+                    }
+
+                    dbRound.SequenceNo = roundDto.SequenceNo;
+                    dbRound.RoundName = roundDto.RoundName;
+                    dbRound.RoundType = roundDto.RoundType;
+                    dbRound.IsPanelRound = roundDto.IsPanelRound;
+                    dbRound.InterviewMode = roundDto.InterviewMode;
+                    dbRound.ScheduledDate = roundDto.ScheduledDate;
+                    dbRound.StartTime = roundDto.StartTime;
+                    dbRound.DurationMinutes = roundDto.DurationMinutes;
+
+                    if (roundDto.ScheduledDate.HasValue && roundDto.StartTime.HasValue &&
+                        roundDto.InterviewerIds?.Any() == true)
+                    {
+                        dbRound.Status = "Scheduled";
+                    }
+                    else
+                    {
+                        dbRound.Status = roundDto.Status ?? "Pending";
+                    }
+
+                    dbRound.UpdatedAt = DateTime.UtcNow;
+                    dbRound.RecruiterID = recruiterId;
+
+                    if (!string.IsNullOrEmpty(roundDto.InterviewMode) &&
+                        roundDto.InterviewMode.Equals("Online", StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (string.IsNullOrEmpty(dbRound.MeetingLink))
+                        {
+                            dbRound.MeetingLink = GenerateJitsiLink(roundDto.JobId, roundDto.CandidateId, dbRound.CandidateRoundID);
+                        }
+                    }
+                    else
+                    {
+                        dbRound.MeetingLink = null;
+                    }
+
+                    // Update panel members
+                    if (dbRound.IsPanelRound)
+                    {
+                        var incomingMemberIds = (roundDto.InterviewerIds ?? new List<string>()).Distinct().ToList();
+                        var existingMemberIds = dbRound.PanelMembers?.Select(pm => pm.InterviewerID).ToList() ?? new List<string>();
+
+                        var remove = dbRound.PanelMembers.Where(pm => !incomingMemberIds.Contains(pm.InterviewerID)).ToList();
+                        if (remove.Any()) _context.CandidatePanelMembers.RemoveRange(remove);
+
+                        var add = incomingMemberIds.Except(existingMemberIds)
+                            .Select(id => new CandidatePanelMember { CandidateRoundID = dbRound.CandidateRoundID, InterviewerID = id })
+                            .ToList();
+                        if (add.Any()) await _context.CandidatePanelMembers.AddRangeAsync(add);
+                    }
+                    else
+                    {
+                        dbRound.InterviewerID = roundDto.InterviewerIds?.FirstOrDefault();
+                        if (dbRound.PanelMembers != null && dbRound.PanelMembers.Any())
+                            _context.CandidatePanelMembers.RemoveRange(dbRound.PanelMembers);
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+                await tx.CommitAsync();
+
+                var resultRound = await _context.CandidateInterviewRounds
+                    .Include(r => r.PanelMembers)
+                    .FirstAsync(r => r.CandidateRoundID == dbRound.CandidateRoundID);
+
+                var panelIds = resultRound.PanelMembers?.Select(pm => pm.InterviewerID).ToList() ?? new List<string>();
+                if (!string.IsNullOrEmpty(resultRound.InterviewerID))
+                    panelIds.Add(resultRound.InterviewerID);
+
+                return new CandidateRoundDto(
+                    resultRound.CandidateRoundID,
+                    resultRound.SequenceNo,
+                    resultRound.RoundName,
+                    resultRound.RoundType,
+                    resultRound.IsPanelRound,
+                    panelIds,
+                    resultRound.InterviewMode,
+                    resultRound.ScheduledDate,
+                    resultRound.StartTime,
+                    resultRound.DurationMinutes ?? 0,
+                    resultRound.Status,
+                    null
+                );
+            }
+            catch
+            {
+                await tx.RollbackAsync();
+                throw;
+            }
+        }
+
+        public async Task<CandidateRoundDto> DeleteRoundAsync(int roundId, string recruiterId)
+        {
+            var round = await _context.CandidateInterviewRounds
+                .Include(r => r.PanelMembers)
+                .FirstOrDefaultAsync(r => r.CandidateRoundID == roundId);
+
+            if (round == null)
+                throw new Exception($"Round with ID {roundId} not found");
+
+            // Store round info for response before deletion
+            var panelIds = round.PanelMembers?.Select(pm => pm.InterviewerID).ToList() ?? new List<string>();
+            if (!string.IsNullOrEmpty(round.InterviewerID))
+                panelIds.Add(round.InterviewerID);
+
+            var roundInfo = new CandidateRoundDto(
+                round.CandidateRoundID,
+                round.SequenceNo,
+                round.RoundName,
+                round.RoundType,
+                round.IsPanelRound,
+                panelIds,
+                round.InterviewMode,
+                round.ScheduledDate,
+                round.StartTime,
+                round.DurationMinutes ?? 0,
+                "Deleted",
+                null
+            );
+
+            // Delete panel members first
+            if (round.PanelMembers?.Any() == true)
+                _context.CandidatePanelMembers.RemoveRange(round.PanelMembers);
+
+            // Delete the round
+            _context.CandidateInterviewRounds.Remove(round);
+            await _context.SaveChangesAsync();
+
+            return roundInfo;
+        }
+
+        public async Task<ValidationResultDto> ValidateRoundsForSaveAsync(int candidateId, int jobId)
+        {
+            var incompleteRounds = await _context.CandidateInterviewRounds
+                .Where(r => r.CandidateID == candidateId &&
+                           r.JobID == jobId &&
+                           r.Status == "Pending" &&
+                           (r.ScheduledDate == null ||
+                            r.StartTime == null ||
+                            (!r.IsPanelRound && r.InterviewerID == null) ||
+                            (r.IsPanelRound && !r.PanelMembers.Any())))
+                .Select(r => new { r.CandidateRoundID, r.RoundName, r.SequenceNo })
+                .ToListAsync();
+
+            var errors = incompleteRounds.Select(r =>
+                $"Round {r.SequenceNo} ({r.RoundName}) is incomplete - must be scheduled or deleted").ToList();
+
+            return new ValidationResultDto(
+                IsValid: !errors.Any(),
+                Errors: errors
+            );
+        }
+
+        private async Task ValidateSingleRoundUpdate(RoundCreateDto roundDto, int candidateId, int jobId, int excludeRoundId)
+        {
+            if (!roundDto.ScheduledDate.HasValue || !roundDto.StartTime.HasValue) return;
+
+            var scheduledStart = roundDto.ScheduledDate.Value.Date + roundDto.StartTime.Value;
+            var scheduledEnd = scheduledStart.AddMinutes(roundDto.DurationMinutes);
+            var breakGap = TimeSpan.FromMinutes(30);
+
+            // Validate business rules
+            var now = DateTime.UtcNow;
+            if (scheduledStart.ToUniversalTime() < now.AddHours(24))
+                throw new InvalidOperationException("Interviews must be scheduled at least 24 hours in advance");
+
+            if (scheduledStart.DayOfWeek == DayOfWeek.Saturday || scheduledStart.DayOfWeek == DayOfWeek.Sunday)
+                throw new InvalidOperationException("Cannot schedule interviews on weekends");
+
+            if (scheduledStart.Date > now.Date.AddDays(30))
+                throw new InvalidOperationException("Cannot schedule more than 30 days in advance");
+
+            // Check for conflicts with other rounds (excluding the current round being updated)
+            foreach (var interviewerId in roundDto.InterviewerIds ?? new List<string>())
+            {
+                if (string.IsNullOrEmpty(interviewerId)) continue;
+
+                var bufferedStart = scheduledStart - breakGap;
+                var bufferedEnd = scheduledEnd + breakGap;
+
+                // Check conflicts with other single interviewer rounds
+                var hasConflict = await _context.CandidateInterviewRounds
+                    .Where(r => r.InterviewerID == interviewerId &&
+                               r.ScheduledDate.HasValue &&
+                               r.CandidateRoundID != excludeRoundId)
+                    .AnyAsync(r => (r.ScheduledDate.Value.Date + r.StartTime.Value) < bufferedEnd &&
+                                  (r.ScheduledDate.Value.Date + r.StartTime.Value)
+                                      .AddMinutes(r.DurationMinutes ?? 60) > bufferedStart);
+
+                if (hasConflict)
+                    throw new InvalidOperationException($"Interviewer {interviewerId} has a scheduling conflict");
+
+                // Check conflicts with panel rounds
+                var hasPanelConflict = await _context.CandidatePanelMembers
+                    .Where(pm => pm.InterviewerID == interviewerId &&
+                                pm.CandidateRound.ScheduledDate.HasValue &&
+                                pm.CandidateRoundID != excludeRoundId)
+                    .AnyAsync(pm => (pm.CandidateRound.ScheduledDate.Value.Date + pm.CandidateRound.StartTime.Value) < bufferedEnd &&
+                                   (pm.CandidateRound.ScheduledDate.Value.Date + pm.CandidateRound.StartTime.Value)
+                                       .AddMinutes(pm.CandidateRound.DurationMinutes ?? 60) > bufferedStart);
+
+                if (hasPanelConflict)
+                    throw new InvalidOperationException($"Interviewer {interviewerId} has a panel interview conflict");
+            }
+        }
     }
 }

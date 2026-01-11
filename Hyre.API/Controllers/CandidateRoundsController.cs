@@ -75,5 +75,54 @@ namespace Hyre.API.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+
+        /*---------------------------------------------------------------------------------------------*/
+        [HttpPost("single")]
+        public async Task<IActionResult> UpsertSingleRound([FromBody] SingleCandidateRoundDto dto)
+        {
+            try
+            {
+                var recruiterId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (string.IsNullOrEmpty(recruiterId)) return Unauthorized();
+
+                var result = await _service.UpsertSingleRoundAsync(dto, recruiterId);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpDelete("{roundId}")]
+        public async Task<IActionResult> DeleteRound(int roundId)
+        {
+            try
+            {
+                var recruiterId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (string.IsNullOrEmpty(recruiterId)) return Unauthorized();
+
+                var deleted = await _service.DeleteRoundAsync(roundId, recruiterId);
+                return Ok(deleted);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpGet("validate-save/{candidateId}/job/{jobId}")]
+        public async Task<IActionResult> ValidateForSave(int candidateId, int jobId)
+        {
+            try
+            {
+                var validation = await _service.ValidateRoundsForSaveAsync(candidateId, jobId);
+                return Ok(validation);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
     }
 }

@@ -11,8 +11,11 @@ namespace Hyre.API.Services
     {
         private readonly IInterviewScheduleRepository _repo;
 
-        private readonly TimeSpan DayStart = TimeSpan.FromHours(10);
-        private readonly TimeSpan DayEnd = TimeSpan.FromHours(16);
+        //private readonly TimeSpan DayStart = TimeSpan.FromHours(10);
+        //private readonly TimeSpan DayEnd = TimeSpan.FromHours(16);
+        private readonly TimeSpan DayStart = new TimeSpan(4, 30, 0); // 04:30 UTC = 10:00 IST
+        private readonly TimeSpan DayEnd = new TimeSpan(10, 30, 0); // 10:30 UTC = 16:00 IST
+
         private readonly TimeSpan BreakGap = TimeSpan.FromMinutes(30);
         private readonly TimeSpan Granularity = TimeSpan.FromMinutes(15);
         private const int MaxInterviewsPerDay = 3;
@@ -29,7 +32,9 @@ namespace Hyre.API.Services
 
         public async Task<List<AvailableSlotDto>> GetAvailableSlotsAsync(NonPanelAvailabilityRequestDto request)
         {
-            var date = request.Date.Date;
+            //var date = request.Date.Date;
+            var date = DateTime.SpecifyKind(request.Date.Date, DateTimeKind.Utc);
+
             ValidateDateRules(date);
 
             var user = await _userManager.FindByIdAsync(request.InterviewerId);
@@ -92,8 +97,11 @@ namespace Hyre.API.Services
             DateTime date)
         {
             var free = new List<(DateTime, DateTime)>();
-            var startOfDay = date.Date + DayStart;
-            var endOfDay = date.Date + DayEnd;
+            //var startOfDay = date.Date + DayStart;
+            //var endOfDay = date.Date + DayEnd;
+            var startOfDay = DateTime.SpecifyKind(date.Date + DayStart, DateTimeKind.Utc);
+            var endOfDay = DateTime.SpecifyKind(date.Date + DayEnd, DateTimeKind.Utc);
+
 
             if (busy.Count == 0)
             {

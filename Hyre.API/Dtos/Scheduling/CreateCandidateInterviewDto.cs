@@ -68,4 +68,28 @@
             int PendingProfilesCount
         );
 
+    /*--------------------------------*/
+
+    public record ValidationResultDto(
+        bool IsValid,
+        List<string> Errors
+    );
+
+    public record SingleCandidateRoundDto(
+       int CandidateId,
+        int JobId,
+       int? CandidateRoundId,
+       int SequenceNo,
+       string RoundName,
+       string RoundType,
+       bool IsPanelRound,
+       List<string> InterviewerIds,
+       string InterviewMode,
+       DateTime? ScheduledDate,
+       TimeSpan? StartTime,
+       int DurationMinutes,
+       string Status,
+       string? ClientTempId
+   );
+
 }
