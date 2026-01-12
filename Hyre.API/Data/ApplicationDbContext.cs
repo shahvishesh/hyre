@@ -60,5 +60,11 @@ namespace Hyre.API.Data
         public DbSet<Employee> Employees { get; set; }
 
         public DbSet<RefreshToken> RefreshTokens { get; set; }
-    }
+
+        public DbSet<DocumentType> DocumentTypes { get; set; }
+
+        public DbSet<CandidateDocumentVerification> CandidateDocumentVerifications { get; set; }
+
+        public DbSet<CandidateDocument> CandidateDocuments { get; set; }
+        }
 }
