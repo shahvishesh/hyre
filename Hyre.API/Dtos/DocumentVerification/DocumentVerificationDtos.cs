@@ -98,6 +98,21 @@ namespace Hyre.API.Dtos.DocumentVerification
             int DocumentTypeId,
             string Status           // Approved | ReuploadRequired | Rejected
         );
+        public record CandidateDocumentDto(
+            int DocumentId,
+            int DocumentTypeId,
+            string DocumentName,
+            string Status,          // Uploaded, ReuploadRequired, etc
+            string? FilePath,
+            DateTime? UploadedAt
+        );
 
+        public record CandidateVerificationDetailDto(
+            int VerificationId,
+            string VerificationStatus,   // ActionRequired, ReuploadRequired
+            List<CandidateDocumentDto> Documents
+        );
+
+        
     }
 }

@@ -87,6 +87,24 @@ namespace Hyre.API.Controllers
             }
         }
 
+        [Authorize(Roles = "Candidate")]
+        [HttpGet("existing")]
+        public async Task<IActionResult> GetExistingDocuments([FromQuery] int jobId)
+        {
+
+            try
+            {
+
+                string userId = User.FindFirstValue(JwtRegisteredClaimNames.Sub)!;
+
+                var result = await _documentService.GetCandidateVerificationDetailAsync(userId, jobId);
+
+                return Ok(result);
+            }catch(Exception ex)
+            {
+                return BadRequest(new ApiResponse(false, ex.Message));
+            }
+        }
 
     }
 }

@@ -130,4 +130,21 @@ public class DocumentRepository : IDocumentRepository
         return doc;
     }
 
+    public async Task<CandidateDocumentVerification> GetVerificationForCandidateAsync(string userId, int jobId)
+    {
+        int candidateId = await GetCandidateIdByUserIdAsync(userId);
+
+        var verification = await _context.CandidateDocumentVerifications
+            .Include(v => v.Documents)
+                .ThenInclude(d => d.DocumentType)
+            .FirstOrDefaultAsync(v =>
+                v.CandidateId == candidateId &&
+                v.JobId == jobId);
+
+        if (verification == null)
+            throw new Exception("Verification record not found");
+
+        return verification;
+    }
+
 }

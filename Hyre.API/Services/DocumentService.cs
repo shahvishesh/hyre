@@ -285,6 +285,27 @@ namespace Hyre.API.Services
 
             return (bytes, fileName);
         }
+        public async Task<CandidateVerificationDetailDto> GetCandidateVerificationDetailAsync(string userId, int jobId)
+        {
+            var verification = await _repository
+                .GetVerificationForCandidateAsync(userId, jobId);
+
+            var docs = verification.Documents.Select(d =>
+                new CandidateDocumentDto(
+                    d.DocumentId,
+                    d.DocumentTypeId,
+                    d.DocumentType.Name,
+                    d.Status,
+                    d.FilePath,
+                    d.UploadedAt
+                )).ToList();
+
+            return new CandidateVerificationDetailDto(
+                verification.VerificationId,
+                verification.Status,
+                docs
+            );
+        }
 
 
     }
