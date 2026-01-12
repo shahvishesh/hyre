@@ -59,5 +59,6 @@ namespace Hyre.API.Data
 
         public DbSet<Employee> Employees { get; set; }
 
-        }
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
+    }
 }

@@ -6,5 +6,7 @@ namespace Hyre.API.Interfaces.Auth
     {
         Task<AuthResponseDto> RegisterAsync(RegisterDto dto);
         Task<AuthResponseDto> LoginAsync(LoginDto dto);
+        Task LogoutAsync(string refreshToken);
+        Task<AuthResponseDto> RefreshTokenAsync(string refreshToken); 
     }
 }

@@ -58,6 +58,29 @@ namespace Hyre.API.Controllers.Auth
             }
         }
 
+        // ---------------- REFRESH ----------------
+        [HttpPost("refresh")]
+        public async Task<IActionResult> Refresh([FromBody] RefreshTokenDto dto)
+        {
+            try
+            {
+                var response = await _authService.RefreshTokenAsync(dto.RefreshToken);
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return Unauthorized(new { error = ex.Message });
+            }
+        }
+
+        // ---------------- LOGOUT ----------------
+        [HttpPost("logout")]
+        public async Task<IActionResult> Logout(
+            [FromBody] RefreshTokenDto dto)
+        {
+            await _authService.LogoutAsync(dto.RefreshToken);
+            return Ok("Logged out successfully");
+        }
 
     }
 }
