@@ -86,6 +86,17 @@ namespace Hyre.API.Dtos.DocumentVerification
             List<HrDocumentDto> Documents
         );
 
+        public record HrVerificationActionDto(
+            int VerificationId,
+            string Action,          // Approve | Reupload | Reject
+            string? Comment,
+            List<HrDocumentActionDto>? Documents
+        );
+
+        public record HrDocumentActionDto(
+            int DocumentTypeId,
+            string Status           // Approved | ReuploadRequired | Rejected
+        );
 
     }
 }

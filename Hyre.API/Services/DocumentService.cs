@@ -213,6 +213,65 @@ namespace Hyre.API.Services
                 docs
             );
         }
+        public async Task ProcessHrActionAsync(string hrUserId, HrVerificationActionDto dto)
+        {
+            var verification = await _repository
+                .GetVerificationWithDocumentsAsync(dto.VerificationId);
+
+            if (verification.Status != "UnderVerification")
+                throw new Exception("Verification not in review state");
+
+            if (dto.Action == "Reject")
+            {
+                verification.Status = "Completed";
+                verification.FinalDecision = "Rejected";
+                verification.CompletedAt = DateTime.UtcNow;
+                verification.HrComment = dto.Comment;
+
+                await _repository.UpdateVerificationAsync(verification);
+                return;
+            }
+
+            if (dto.Documents == null || !dto.Documents.Any())
+                throw new Exception("Document decisions required");
+
+            bool anyReupload = false;
+
+            foreach (var docAction in dto.Documents)
+            {
+                var doc = verification.Documents
+                    .FirstOrDefault(x => x.DocumentTypeId == docAction.DocumentTypeId);
+
+                if (doc == null)
+                    throw new Exception($"Document not found: {docAction.DocumentTypeId}");
+
+                doc.Status = docAction.Status;
+                doc.VerifiedAt = DateTime.UtcNow;
+                doc.VerifiedBy = hrUserId;
+                doc.HrComment = dto.Comment;
+
+                if (docAction.Status == "ReuploadRequired")
+                    anyReupload = true;
+
+                await _repository.UpdateCandidateDocumentAsync(doc);
+            }
+
+            if (dto.Action == "Approve" && anyReupload)
+                throw new Exception("Cannot approve when re-upload is required");
+
+            if (anyReupload)
+            {
+                verification.Status = "ReuploadRequired";
+            }
+            else
+            {
+                verification.Status = "Completed";
+                verification.FinalDecision = "Accepted";
+                verification.CompletedAt = DateTime.UtcNow;
+            }
+
+            await _repository.UpdateVerificationAsync(verification);
+        }
 
     }
 }

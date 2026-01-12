@@ -2,6 +2,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using static Hyre.API.Dtos.DocumentVerification.DocumentVerificationDtos;
 
 namespace Hyre.API.Controllers
@@ -67,6 +69,33 @@ namespace Hyre.API.Controllers
             }catch(Exception ex)
             {
                 return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpPost("action")]
+        public async Task<IActionResult> ProcessAction(
+        [FromBody] HrVerificationActionDto dto)
+        {
+            try
+            {
+                string hrUserId = User.FindFirstValue(JwtRegisteredClaimNames.Sub)!;
+                if (string.IsNullOrEmpty(hrUserId))
+                    return Unauthorized("hrUserId not found in token");
+
+                await _documentService
+                    .ProcessHrActionAsync(hrUserId, dto);
+
+                return Ok(new ApiResponse(
+                    true,
+                    "Action processed successfully"
+                ));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ApiResponse(
+                    false,
+                    ex.Message
+                ));
             }
         }
     }

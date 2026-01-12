@@ -101,5 +101,21 @@ public class DocumentRepository : IDocumentRepository
 
         return verification;
     }
+    public async Task<CandidateDocumentVerification> GetVerificationWithDocumentsAsync(int verificationId)
+    {
+        var verification = await _context.CandidateDocumentVerifications
+            .Include(v => v.Documents)
+            .FirstOrDefaultAsync(v => v.VerificationId == verificationId);
 
+        if (verification == null)
+            throw new Exception("Verification not found");
+
+        return verification;
+    }
+
+    public async Task UpdateCandidateDocumentAsync(CandidateDocument doc)
+    {
+        _context.CandidateDocuments.Update(doc);
+        await _context.SaveChangesAsync();
+    }
 }
