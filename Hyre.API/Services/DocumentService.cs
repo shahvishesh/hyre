@@ -150,5 +150,43 @@ namespace Hyre.API.Services
             return result;
         }
 
+        public async Task<List<CandidateDetailDto>> GetCandidatesByVerificationStatusAsync(int jobId, string status)
+        {
+            var candidatesWithVerification = await _context.CandidateDocumentVerifications
+                .Where(v => v.JobId == jobId && v.Status == status)
+                .Include(v => v.Candidate)
+                    .ThenInclude(c => c.CandidateSkills)
+                    .ThenInclude(cs => cs.Skill)
+                .Select(v => v.Candidate)
+                .ToListAsync();
+
+            var result = new List<CandidateDetailDto>();
+
+            foreach (var candidate in candidatesWithVerification)
+            {
+                var candidateSkills = candidate.CandidateSkills?
+                    .Where(cs => cs.Skill != null)
+                    .Select(cs => new CandidateSkillDto(
+                        cs.SkillID,
+                        cs.Skill.SkillName,
+                        cs.YearsOfExperience
+                    ))
+                    .ToList() ?? new List<CandidateSkillDto>();
+
+                result.Add(new CandidateDetailDto(
+                    candidate.CandidateID,
+                    candidate.FirstName,
+                    candidate.LastName,
+                    candidate.Email,
+                    candidate.Phone,
+                    candidate.ExperienceYears,
+                    candidate.ResumePath,
+                    candidate.Status,
+                    candidateSkills
+                ));
+            }
+
+            return result;
+        }
     }
 }

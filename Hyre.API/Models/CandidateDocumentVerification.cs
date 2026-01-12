@@ -19,7 +19,7 @@ namespace Hyre.API.Models
         // Overall status
         [MaxLength(50)]
         public string Status { get; set; } = "ActionRequired";
-        // ActionRequired, UnderVerification, Completed
+        // ActionRequired, ReuploadRequired, UnderVerification, Completed
 
         public DateTime Deadline { get; set; }
 

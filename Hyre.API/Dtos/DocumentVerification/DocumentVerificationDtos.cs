@@ -48,5 +48,23 @@ namespace Hyre.API.Dtos.DocumentVerification
             DateTime CreatedAt,
             int PendingProfilesCount
         );
+
+        public record CandidateDetailDto(
+        int CandidateID,
+        string FirstName,
+        string? LastName,
+        string? Email,
+        string? Phone,
+        decimal? ExperienceYears,
+        string? ResumePath,
+        string Status,
+        List<CandidateSkillDto> Skills
+    );
+
+        public record CandidateSkillDto(
+            int SkillID,
+            string SkillName,
+            decimal? YearsOfExperience
+        );
     }
 }

@@ -29,5 +29,27 @@ namespace Hyre.API.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+
+        [HttpGet("jobs/{jobId}/candidates")]
+        public async Task<ActionResult<List<CandidateDetailDto>>> GetCandidatesByVerificationStatus(
+            int jobId,
+            [FromQuery] string status)
+        {
+            try
+            {
+                var validStatuses = new[] { "ReuploadRequired", "UnderVerification", "Completed" };
+                if (string.IsNullOrEmpty(status) || !validStatuses.Contains(status))
+                {
+                    return BadRequest(new { message = "Invalid status. Must be one of: ReuploadRequired, UnderVerification, Completed" });
+                }
+
+                var candidates = await _documentService.GetCandidatesByVerificationStatusAsync(jobId, status);
+                return Ok(candidates);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
     }
 }
