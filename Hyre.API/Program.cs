@@ -146,6 +146,75 @@ async Task SeedRolesAsync(RoleManager<IdentityRole> roleManager)
     }
 }
 
+async Task SeedDocumentTypesAsync(ApplicationDbContext context)
+{
+    var documentTypes = new List<DocumentType>
+    {
+        new DocumentType
+        {
+            Name = "10th Marksheet",
+            IsMandatory = true,
+            AllowedFormats = "pdf,jpg,png",
+            IsActive = true,
+            DisplayOrder = 1
+        },
+        new DocumentType
+        {
+            Name = "12th Marksheet",
+            IsMandatory = true,
+            AllowedFormats = "pdf,jpg,png",
+            IsActive = true,
+            DisplayOrder = 2
+        },
+        new DocumentType
+        {
+            Name = "Degree Certificate",
+            IsMandatory = false,
+            AllowedFormats = "pdf,jpg,png",
+            IsActive = true,
+            DisplayOrder = 3
+        },
+        new DocumentType
+        {
+            Name = "Permanent Residence Proof",
+            IsMandatory = true,
+            AllowedFormats = "pdf,jpg,png",
+            IsActive = true,
+            DisplayOrder = 4
+        },
+        new DocumentType
+        {
+            Name = "Personal ID Proof",
+            IsMandatory = true,
+            AllowedFormats = "pdf,jpg,png",
+            IsActive = true,
+            DisplayOrder = 5
+        },
+        new DocumentType
+        {
+            Name = "School Leaving Certificate",
+            IsMandatory = true,
+            AllowedFormats = "pdf,jpg,png",
+            IsActive = true,
+            DisplayOrder = 6
+        }
+    };
+
+    foreach (var doc in documentTypes)
+    {
+        var exists = await context.DocumentTypes
+            .AnyAsync(x => x.Name == doc.Name);
+
+        if (!exists)
+        {
+            await context.DocumentTypes.AddAsync(doc);
+        }
+    }
+
+    await context.SaveChangesAsync();
+}
+
+
 //Log request details
 app.Use(async (context, next) =>
 {
@@ -179,7 +248,9 @@ app.Use(async (context, next) =>
 using (var scope = app.Services.CreateScope())
 {
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     await SeedRolesAsync(roleManager);
+    await SeedDocumentTypesAsync(dbContext);
 }
 
 
