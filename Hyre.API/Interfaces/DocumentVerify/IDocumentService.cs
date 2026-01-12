@@ -15,7 +15,7 @@ namespace Hyre.API.Interfaces.DocumentVerify
 
         Task<(byte[] fileBytes, string fileName)> GetDocumentForHrAsync(int documentId);
         Task<CandidateVerificationDetailDto> GetCandidateVerificationDetailAsync(string userId, int jobId);
-
+        Task<List<CandidateJobDto>> GetJobsWithPendingDocumentSubmissionAsync(string userId);
 
 
     }

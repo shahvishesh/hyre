@@ -146,5 +146,15 @@ public class DocumentRepository : IDocumentRepository
 
         return verification;
     }
+    public async Task<List<Job>> GetJobsWithPendingDocumentSubmissionAsync(string userId)
+    {
+        int candidateId = await GetCandidateIdByUserIdAsync(userId);
 
+        return await _context.CandidateDocumentVerifications
+            .Where(v => v.CandidateId == candidateId &&
+                       (v.Status == "ActionRequired" || v.Status == "ReuploadRequired"))
+            .Include(v => v.Job)
+            .Select(v => v.Job)
+            .ToListAsync();
+    }
 }

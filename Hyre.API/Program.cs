@@ -6,6 +6,7 @@ using Hyre.API.Interfaces.CandidateFeedback;
 using Hyre.API.Interfaces.CandidateMatching;
 using Hyre.API.Interfaces.CandidateReview;
 using Hyre.API.Interfaces.Candidates;
+using Hyre.API.Interfaces.DocumentVerify;
 using Hyre.API.Interfaces.InterviewerJob;
 using Hyre.API.Interfaces.InterviewTab;
 using Hyre.API.Interfaces.RecruiterFeedback;
@@ -125,6 +126,9 @@ builder.Services.AddScoped<IRecruiterFeedbackService, RecruiterFeedbackService>(
 
 builder.Services.AddScoped<IRecruiterDecisionRepository, RecruiterDecisionRepository>();
 builder.Services.AddScoped<IRecruiterDecisionService, RecruiterDecisionService>();
+
+builder.Services.AddScoped<IDocumentRepository, DocumentRepository>();
+builder.Services.AddScoped<IDocumentService, DocumentService>();
 
 builder.Services.AddAuthorization();
 

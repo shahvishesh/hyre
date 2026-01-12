@@ -306,7 +306,23 @@ namespace Hyre.API.Services
                 docs
             );
         }
+        public async Task<List<CandidateJobDto>> GetJobsWithPendingDocumentSubmissionAsync(string userId)
+        {
+            var jobs = await _repository.GetJobsWithPendingDocumentSubmissionAsync(userId);
 
+            return jobs.Select(job => new CandidateJobDto(
+                job.JobID,
+                job.Title,
+                job.Description ?? string.Empty,
+                job.CompanyName,
+                job.Location ?? string.Empty,
+                job.JobType ?? string.Empty,
+                job.WorkplaceType ?? string.Empty,
+                job.Status,
+                job.MinExperience,
+                job.MaxExperience
+            )).ToList();
+        }
 
     }
 }

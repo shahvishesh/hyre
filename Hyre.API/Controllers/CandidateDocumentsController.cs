@@ -105,6 +105,25 @@ namespace Hyre.API.Controllers
                 return BadRequest(new ApiResponse(false, ex.Message));
             }
         }
+        [Authorize(Roles = "Candidate")]
+        [HttpGet("pending-jobs")]
+        public async Task<IActionResult> GetJobsWithPendingDocumentSubmission()
+        {
+            try
+            {
+                string userId = GetUserId();
 
+                if (string.IsNullOrEmpty(userId))
+                    return Unauthorized("UserId not found in token");
+
+                var result = await _documentService.GetJobsWithPendingDocumentSubmissionAsync(userId);
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ApiResponse(false, ex.Message));
+            }
+        }
     }
 }

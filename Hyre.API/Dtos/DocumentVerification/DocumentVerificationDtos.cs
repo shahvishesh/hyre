@@ -113,6 +113,19 @@ namespace Hyre.API.Dtos.DocumentVerification
             List<CandidateDocumentDto> Documents
         );
 
-        
+        public record CandidateJobDto(
+           int JobID,
+           string Title,
+           string Description,
+           string CompanyName,
+           string Location,
+           string JobType,
+           string WorkplaceType,
+           string Status,
+           int? MinExperience,
+           int? MaxExperience
+        );
+
+
     }
 }
