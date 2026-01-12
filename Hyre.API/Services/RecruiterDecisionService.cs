@@ -107,6 +107,41 @@ namespace Hyre.API.Services
             {
                 candidateJob.Stage = "Shortlisted"; 
             }
+
+            // Create CandidateDocumentVerification when shortlisting
+            await CreateDocumentVerificationForShortlistedCandidate(round.CandidateID, round.JobID);
+        }
+
+        private async Task CreateDocumentVerificationForShortlistedCandidate(int candidateId, int jobId)
+        {
+            var existingVerification = await _repo.GetExistingDocumentVerificationAsync(candidateId, jobId);
+
+            if (existingVerification == null)
+            {
+                var verification = new CandidateDocumentVerification
+                {
+                    CandidateId = candidateId,
+                    JobId = jobId,
+                    Status = "ActionRequired",
+                    Deadline = DateTime.UtcNow.AddDays(5),
+                    StartedAt = DateTime.UtcNow
+                };
+
+                await _repo.CreateCandidateDocumentVerificationAsync(verification);
+            }
+            else
+            {
+                // If verification already exists but in a completed state, reset it
+                if (existingVerification.Status == "Completed")
+                {
+                    existingVerification.Status = "ActionRequired";
+                    existingVerification.Deadline = DateTime.UtcNow.AddDays(5);
+                    existingVerification.StartedAt = DateTime.UtcNow;
+                    existingVerification.CompletedAt = null;
+                    existingVerification.FinalDecision = null;
+                    existingVerification.HrComment = null;
+                }
+            }
         }
 
         public async Task<RoundDetailDto?> GetNextRoundDetailAsync(int candidateId, int jobId, int currentSequenceNo)

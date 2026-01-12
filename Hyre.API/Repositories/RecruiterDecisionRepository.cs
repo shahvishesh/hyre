@@ -75,6 +75,18 @@ namespace Hyre.API.Repositories
                     cj.JobID == jobId);
         }
 
+        public async Task<CandidateDocumentVerification?> GetExistingDocumentVerificationAsync(int candidateId, int jobId)
+        {
+            return await _context.CandidateDocumentVerifications
+                .FirstOrDefaultAsync(v =>
+                    v.CandidateId == candidateId &&
+                    v.JobId == jobId);
+        }
+
+        public async Task CreateCandidateDocumentVerificationAsync(CandidateDocumentVerification verification)
+        {
+            _context.CandidateDocumentVerifications.Add(verification);
+        }
 
         public async Task SaveAsync()
         {

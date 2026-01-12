@@ -10,12 +10,11 @@ namespace Hyre.API.Interfaces.RecruiterFeedback
         Task<CandidateInterviewRound?> GetNextRoundDetailAsync(
             int candidateId, int jobId, int currentSequenceNo);
         Task<CandidateInterviewRound?> GetRoundWithDecisionDetailsAsync(int roundId);
-
         Task<List<CandidateInterviewRound>> GetFutureRoundsAsync(
             int candidateId, int jobId, int fromSequenceNo);
-
         Task<CandidateJob?> GetCandidateJobAsync(int candidateId, int jobId);
-
+        Task<CandidateDocumentVerification?> GetExistingDocumentVerificationAsync(int candidateId, int jobId);
+        Task CreateCandidateDocumentVerificationAsync(CandidateDocumentVerification verification);
         Task SaveAsync();
     }
 }
