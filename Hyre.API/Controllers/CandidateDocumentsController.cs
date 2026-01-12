@@ -66,6 +66,27 @@ namespace Hyre.API.Controllers
             }
         }
 
+        [Authorize(Roles = "Candidate")]
+        [HttpPost("submit")]
+        public async Task<IActionResult> Submit([FromBody] SubmitForVerificationDto dto)
+        {
+            try
+            {
+                string userId = User.FindFirstValue(JwtRegisteredClaimNames.Sub)!;
+
+                await _documentService.SubmitForVerificationAsync(userId, dto);
+
+                return Ok(new ApiResponse(
+                    true,
+                    "Documents submitted for verification"
+                ));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ApiResponse(false, ex.Message));
+            }
+        }
+
 
     }
 }

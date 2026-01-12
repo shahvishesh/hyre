@@ -68,4 +68,17 @@ public class DocumentRepository : IDocumentRepository
         await _context.SaveChangesAsync();
     }
 
+    public async Task UpdateVerificationAsync(CandidateDocumentVerification entity)
+    {
+        _context.CandidateDocumentVerifications.Update(entity);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task<List<DocumentType>> GetMandatoryDocumentTypesAsync()
+    {
+        return await _context.DocumentTypes
+            .Where(x => x.IsActive && x.IsMandatory)
+            .ToListAsync();
+    }
+
 }

@@ -92,6 +92,30 @@ namespace Hyre.API.Services
             }
         }
 
+        public async Task SubmitForVerificationAsync(string userId, SubmitForVerificationDto dto)
+        {
+            var verification = await _repository.GetVerificationAsync(userId, dto.JobId);
+
+            if (verification.Status != "ActionRequired")
+                throw new Exception("Verification already submitted");
+
+            var mandatoryDocs = await _repository.GetMandatoryDocumentTypesAsync();
+
+            foreach (var doc in mandatoryDocs)
+            {
+                var uploaded = verification.Documents
+                    .Any(d => d.DocumentTypeId == doc.DocumentTypeId
+                           && d.Status == "Uploaded");
+
+                if (!uploaded)
+                    throw new Exception($"Mandatory document missing: {doc.Name}");
+            }
+
+            verification.Status = "UnderVerification";
+            await _repository.UpdateVerificationAsync(verification);
+        }
+
+
 
     }
 }

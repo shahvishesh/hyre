@@ -28,6 +28,7 @@
             string Message
         );
 
+        public record SubmitForVerificationDto(int JobId);
 
 
     }
