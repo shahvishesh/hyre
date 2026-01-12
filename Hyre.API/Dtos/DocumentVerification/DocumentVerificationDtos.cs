@@ -51,6 +51,7 @@ namespace Hyre.API.Dtos.DocumentVerification
 
         public record CandidateDetailDto(
         int CandidateID,
+        int verificationID,
         string FirstName,
         string? LastName,
         string? Email,
@@ -66,5 +67,25 @@ namespace Hyre.API.Dtos.DocumentVerification
             string SkillName,
             decimal? YearsOfExperience
         );
+
+        public record HrDocumentDto(
+            int DocumentTypeId,
+            string DocumentName,
+            string Status,          // Uploaded, Approved, ReuploadRequired, Rejected
+            string FilePath,
+            DateTime? UploadedAt,
+            int UploadedBy,         // CandidateId
+            DateTime? VerifiedAt,
+            string? VerifiedBy,     // HR UserId
+            string? HrComment
+        );
+
+        public record HrVerificationDetailDto(
+            int VerificationId,
+            string VerificationStatus,   // UnderVerification, ReuploadRequired
+            List<HrDocumentDto> Documents
+        );
+
+
     }
 }

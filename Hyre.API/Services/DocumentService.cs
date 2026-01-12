@@ -152,18 +152,18 @@ namespace Hyre.API.Services
 
         public async Task<List<CandidateDetailDto>> GetCandidatesByVerificationStatusAsync(int jobId, string status)
         {
-            var candidatesWithVerification = await _context.CandidateDocumentVerifications
+            var candidateVerifications = await _context.CandidateDocumentVerifications
                 .Where(v => v.JobId == jobId && v.Status == status)
                 .Include(v => v.Candidate)
                     .ThenInclude(c => c.CandidateSkills)
                     .ThenInclude(cs => cs.Skill)
-                .Select(v => v.Candidate)
                 .ToListAsync();
 
             var result = new List<CandidateDetailDto>();
 
-            foreach (var candidate in candidatesWithVerification)
+            foreach (var verification in candidateVerifications)
             {
+                var candidate = verification.Candidate;
                 var candidateSkills = candidate.CandidateSkills?
                     .Where(cs => cs.Skill != null)
                     .Select(cs => new CandidateSkillDto(
@@ -175,6 +175,7 @@ namespace Hyre.API.Services
 
                 result.Add(new CandidateDetailDto(
                     candidate.CandidateID,
+                    verification.VerificationId,
                     candidate.FirstName,
                     candidate.LastName,
                     candidate.Email,
@@ -188,5 +189,30 @@ namespace Hyre.API.Services
 
             return result;
         }
+
+        public async Task<HrVerificationDetailDto> GetVerificationForHrAsync(int verificationId)
+        {
+            var verification = await _repository.GetVerificationForHrAsync(verificationId);
+
+            var docs = verification.Documents.Select(d =>
+                new HrDocumentDto(
+                    d.DocumentTypeId,
+                    d.DocumentType.Name,
+                    d.Status,
+                    d.FilePath,
+                    d.UploadedAt,
+                    d.UploadedBy,
+                    d.VerifiedAt,
+                    d.VerifiedBy,
+                    d.HrComment
+                )).ToList();
+
+            return new HrVerificationDetailDto(
+                verification.VerificationId,
+                verification.Status,
+                docs
+            );
+        }
+
     }
 }

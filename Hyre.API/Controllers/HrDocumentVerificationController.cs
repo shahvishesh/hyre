@@ -1,11 +1,13 @@
 ﻿using Hyre.API.Interfaces.DocumentVerify;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using static Hyre.API.Dtos.DocumentVerification.DocumentVerificationDtos;
 
 namespace Hyre.API.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/hr/verifications")]
+    [Authorize(Roles = "HR")]
     [ApiController]
     public class HrDocumentVerificationController : ControllerBase
     {
@@ -47,6 +49,22 @@ namespace Hyre.API.Controllers
                 return Ok(candidates);
             }
             catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpGet("{verificationId}")]
+        public async Task<IActionResult> GetVerificationDetail(int verificationId)
+        {
+            try
+            {
+
+                var result = await _documentService
+                    .GetVerificationForHrAsync(verificationId);
+
+                return Ok(result);
+            }catch(Exception ex)
             {
                 return BadRequest(new { message = ex.Message });
             }

@@ -9,5 +9,8 @@ namespace Hyre.API.Interfaces.DocumentVerify
         Task SubmitForVerificationAsync(string userId, SubmitForVerificationDto dto);
         Task<List<DocumentJobDto>> GetJobsWithPendingVerificationsAsync();
         Task<List<CandidateDetailDto>> GetCandidatesByVerificationStatusAsync(int jobId, string status);
+
+        Task<HrVerificationDetailDto> GetVerificationForHrAsync(int verificationId);
+
     }
 }

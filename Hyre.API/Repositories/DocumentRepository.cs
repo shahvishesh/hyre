@@ -87,4 +87,19 @@ public class DocumentRepository : IDocumentRepository
             .Where(j => j.Status == "Open")
             .ToListAsync();
     }
+
+    public async Task<CandidateDocumentVerification> GetVerificationForHrAsync(int verificationId)
+    {
+        var verification = await _context
+            .CandidateDocumentVerifications
+            .Include(v => v.Documents)
+                .ThenInclude(d => d.DocumentType)
+            .FirstOrDefaultAsync(v => v.VerificationId == verificationId);
+
+        if (verification == null)
+            throw new Exception("Verification record not found");
+
+        return verification;
+    }
+
 }
