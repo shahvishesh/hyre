@@ -14,5 +14,21 @@
             string? UploadedFilePath
         );
 
+        public record UploadDocumentDto(int JobId, int DocumentTypeId, IFormFile File);
+
+        public record UploadResponseDto(
+            bool Success,
+            string Message,
+            int DocumentTypeId,
+            string Status
+        );
+
+        public record ApiResponse(
+            bool Success,
+            string Message
+        );
+
+
+
     }
 }

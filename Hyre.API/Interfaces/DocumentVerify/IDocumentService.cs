@@ -5,6 +5,8 @@ namespace Hyre.API.Interfaces.DocumentVerify
     public interface IDocumentService
     {
         Task<List<RequiredDocumentDto>> GetRequiredDocumentsAsync(string candidateId,int jobId);
+        Task UploadDocumentAsync(string userId, UploadDocumentDto dto);
+
     }
 
 }

@@ -49,4 +49,23 @@ public class DocumentRepository : IDocumentRepository
 
         return candidate.CandidateID;
     }
+
+    public async Task<CandidateDocument?> GetCandidateDocumentAsync(int verificationId, int documentTypeId)
+    {
+        return await _context.CandidateDocuments
+            .FirstOrDefaultAsync(x => x.VerificationId == verificationId && x.DocumentTypeId == documentTypeId);
+    }
+
+    public async Task AddAsync(CandidateDocument entity)
+    {
+        _context.CandidateDocuments.Add(entity);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task UpdateAsync(CandidateDocument entity)
+    {
+        _context.CandidateDocuments.Update(entity);
+        await _context.SaveChangesAsync();
+    }
+
 }

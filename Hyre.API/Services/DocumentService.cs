@@ -1,4 +1,5 @@
 ﻿using Hyre.API.Interfaces.DocumentVerify;
+using Hyre.API.Models;
 using static Hyre.API.Dtos.DocumentVerification.DocumentVerificationDtos;
 
 namespace Hyre.API.Services
@@ -41,6 +42,56 @@ namespace Hyre.API.Services
 
             return result;
         }
+
+        public async Task UploadDocumentAsync(string userId, UploadDocumentDto dto)
+        {
+            var verification = await _repository.GetVerificationAsync(userId, dto.JobId);
+
+            if (verification.Status != "ActionRequired" &&
+                verification.Status != "ReuploadRequired")
+                throw new Exception("Upload not allowed in current state");
+
+            if (dto.File == null || dto.File.Length == 0)
+                throw new Exception("Invalid file");
+
+            string folder = Path.Combine(Directory.GetCurrentDirectory(), "PrivateFiles", "Uploads", $"Candidate_{verification.CandidateId}_{dto.JobId}");
+
+            Directory.CreateDirectory(folder);
+
+            string fileName = $"{Guid.NewGuid()}_{dto.File.FileName}";
+            string filePath = Path.Combine(folder, fileName);
+
+            using var stream = new FileStream(filePath, FileMode.Create);
+            await dto.File.CopyToAsync(stream);
+
+            var existing = await _repository
+                .GetCandidateDocumentAsync(verification.VerificationId, dto.DocumentTypeId);
+
+            if (existing == null)
+            {
+                var entity = new CandidateDocument
+                {
+                    VerificationId = verification.VerificationId,
+                    DocumentTypeId = dto.DocumentTypeId,
+                    FilePath = filePath,
+                    Status = "Uploaded",
+                    UploadedAt = DateTime.UtcNow,
+                    UploadedBy = verification.CandidateId
+                };
+
+                await _repository.AddAsync(entity);
+            }
+            else
+            {
+                existing.FilePath = filePath;
+                existing.Status = "Uploaded";
+                existing.UploadedAt = DateTime.UtcNow;
+                existing.Version += 1;
+
+                await _repository.UpdateAsync(existing);
+            }
+        }
+
 
     }
 }
