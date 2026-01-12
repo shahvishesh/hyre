@@ -15,6 +15,8 @@ namespace Hyre.API.Interfaces.DocumentVerify
         Task<CandidateDocumentVerification> GetVerificationForHrAsync(int verificationId);
         Task<CandidateDocumentVerification> GetVerificationWithDocumentsAsync(int verificationId);
         Task UpdateCandidateDocumentAsync(CandidateDocument doc);
+        Task<CandidateDocument> GetDocumentByIdAsync(int documentId);
+
 
 
     }

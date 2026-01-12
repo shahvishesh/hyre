@@ -118,4 +118,16 @@ public class DocumentRepository : IDocumentRepository
         _context.CandidateDocuments.Update(doc);
         await _context.SaveChangesAsync();
     }
+    public async Task<CandidateDocument> GetDocumentByIdAsync(int documentId)
+    {
+        var doc = await _context.CandidateDocuments
+            .Include(d => d.Verification)
+            .FirstOrDefaultAsync(x => x.DocumentId == documentId);
+
+        if (doc == null)
+            throw new Exception("Document not found");
+
+        return doc;
+    }
+
 }

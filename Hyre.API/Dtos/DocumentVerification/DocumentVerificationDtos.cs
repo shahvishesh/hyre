@@ -69,6 +69,7 @@ namespace Hyre.API.Dtos.DocumentVerification
         );
 
         public record HrDocumentDto(
+            int DocumentId,
             int DocumentTypeId,
             string DocumentName,
             string Status,          // Uploaded, Approved, ReuploadRequired, Rejected

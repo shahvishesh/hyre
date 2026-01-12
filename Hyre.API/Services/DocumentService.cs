@@ -196,6 +196,7 @@ namespace Hyre.API.Services
 
             var docs = verification.Documents.Select(d =>
                 new HrDocumentDto(
+                    d.DocumentId,
                     d.DocumentTypeId,
                     d.DocumentType.Name,
                     d.Status,
@@ -272,6 +273,19 @@ namespace Hyre.API.Services
 
             await _repository.UpdateVerificationAsync(verification);
         }
+        public async Task<(byte[] fileBytes, string fileName)> GetDocumentForHrAsync(int documentId)
+        {
+            var doc = await _repository.GetDocumentByIdAsync(documentId);
+
+            if (!System.IO.File.Exists(doc.FilePath))
+                throw new Exception("File not found");
+
+            var bytes = await File.ReadAllBytesAsync(doc.FilePath);
+            var fileName = Path.GetFileName(doc.FilePath);
+
+            return (bytes, fileName);
+        }
+
 
     }
 }

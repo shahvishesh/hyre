@@ -13,6 +13,9 @@ namespace Hyre.API.Interfaces.DocumentVerify
         Task<HrVerificationDetailDto> GetVerificationForHrAsync(int verificationId);
         Task ProcessHrActionAsync(string hrUserId, HrVerificationActionDto dto);
 
+        Task<(byte[] fileBytes, string fileName)> GetDocumentForHrAsync(int documentId);
+
+
 
     }
 }
