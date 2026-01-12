@@ -1,4 +1,8 @@
-﻿namespace Hyre.API.Dtos.DocumentVerification
+﻿using DocumentFormat.OpenXml.Spreadsheet;
+using Hyre.API.Models;
+using System.Runtime.Intrinsics.X86;
+
+namespace Hyre.API.Dtos.DocumentVerification
 {
     public class DocumentVerificationDtos
     {
@@ -30,6 +34,19 @@
 
         public record SubmitForVerificationDto(int JobId);
 
-
+        public record DocumentJobDto(
+            int JobID,
+            string Title,
+            string Description,
+            string CompanyName,
+            string Location,
+            string JobType,
+            string WorkplaceType,
+            string Status,
+            int? MinExperience,
+            int? MaxExperience,
+            DateTime CreatedAt,
+            int PendingProfilesCount
+        );
     }
 }

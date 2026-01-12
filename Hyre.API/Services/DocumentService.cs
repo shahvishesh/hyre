@@ -1,5 +1,7 @@
-﻿using Hyre.API.Interfaces.DocumentVerify;
+﻿using Hyre.API.Data;
+using Hyre.API.Interfaces.DocumentVerify;
 using Hyre.API.Models;
+using Microsoft.EntityFrameworkCore;
 using static Hyre.API.Dtos.DocumentVerification.DocumentVerificationDtos;
 
 namespace Hyre.API.Services
@@ -7,10 +9,12 @@ namespace Hyre.API.Services
     public class DocumentService : IDocumentService
     {
         private readonly IDocumentRepository _repository;
+        private readonly ApplicationDbContext _context;
 
-        public DocumentService(IDocumentRepository repository)
+        public DocumentService(IDocumentRepository repository, ApplicationDbContext context)
         {
             _repository = repository;
+            _context = context;
         }
 
         public async Task<List<RequiredDocumentDto>> GetRequiredDocumentsAsync(string userId, int jobId)
@@ -115,7 +119,36 @@ namespace Hyre.API.Services
             await _repository.UpdateVerificationAsync(verification);
         }
 
+        public async Task<List<DocumentJobDto>> GetJobsWithPendingVerificationsAsync()
+        {
+            var jobs = await _repository.GetJobsAsync();
 
+            var result = new List<DocumentJobDto>();
+
+            foreach (var job in jobs)
+            {
+                var pendingCount = await _context.CandidateDocumentVerifications
+                    .Where(v => v.JobId == job.JobID && v.Status == "UnderVerification")
+                    .CountAsync();
+
+                result.Add(new DocumentJobDto(
+                    job.JobID,
+                    job.Title,
+                    job.Description ?? string.Empty,
+                    job.CompanyName,
+                    job.Location ?? string.Empty,
+                    job.JobType ?? string.Empty,
+                    job.WorkplaceType ?? string.Empty,
+                    job.Status,
+                    job.MinExperience,
+                    job.MaxExperience,
+                    job.CreatedAt,
+                    pendingCount
+                ));
+            }
+
+            return result;
+        }
 
     }
 }

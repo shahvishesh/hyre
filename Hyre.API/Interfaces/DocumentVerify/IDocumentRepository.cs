@@ -1,5 +1,4 @@
 ﻿using Hyre.API.Models;
-using static Hyre.API.Dtos.DocumentVerification.DocumentVerificationDtos;
 
 namespace Hyre.API.Interfaces.DocumentVerify
 {
@@ -12,6 +11,6 @@ namespace Hyre.API.Interfaces.DocumentVerify
         Task UpdateAsync(CandidateDocument entity);
         Task UpdateVerificationAsync(CandidateDocumentVerification entity);
         Task<List<DocumentType>> GetMandatoryDocumentTypesAsync();
-
+        Task<List<Job>> GetJobsAsync();
     }
 }

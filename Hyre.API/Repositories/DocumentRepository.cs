@@ -81,4 +81,10 @@ public class DocumentRepository : IDocumentRepository
             .ToListAsync();
     }
 
+    public async Task<List<Job>> GetJobsAsync()
+    {
+        return await _context.Jobs
+            .Where(j => j.Status == "Open")
+            .ToListAsync();
+    }
 }
